@@ -12,7 +12,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system/next';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -128,7 +128,8 @@ export default function Upload() {
     if (uploadMode === 'chatExport' && chatExportFile) {
       // Read the file content and pass it to analyzing
       try {
-        const content = await FileSystem.readAsStringAsync(chatExportFile.uri);
+        const file = new File(chatExportFile.uri);
+        const content = await file.text();
         router.push({
           pathname: '/scan/analyzing',
           params: {
@@ -144,7 +145,8 @@ export default function Upload() {
     } else if (uploadMode === 'groupChat' && chatExportFile) {
       // Read the file content and pass it to analyzing for group chat
       try {
-        const content = await FileSystem.readAsStringAsync(chatExportFile.uri);
+        const file = new File(chatExportFile.uri);
+        const content = await file.text();
         router.push({
           pathname: '/scan/analyzing',
           params: {

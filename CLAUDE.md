@@ -1,11 +1,8 @@
 # Ratioed Rebuild - Claude Code Context
 
-## PRIORITY: GitHub Setup Needed
-**User needs to set up a GitHub repo for the entire `/root/projects/ratioed` project.**
-- No remote configured yet
-- All files staged but not committed
-- Ensure frequent pushes/backups after significant changes
-- Remind user to commit and push periodically
+## GitHub
+**Repo:** https://github.com/guardian-nexus/ratioedapp
+- Push after significant changes
 
 ---
 
@@ -102,19 +99,14 @@ npx tsc --noEmit
 
 ## Remaining Tasks
 
-1. **SET UP GITHUB REPO (PRIORITY)**
-   - Create repo for entire `/root/projects/ratioed` project
-   - Add remote, commit, and push
-   - Set up regular backup routine - push after significant changes
-
-2. **Re-add RevenueCat properly**
+1. **Re-add RevenueCat properly**
    - Need lazy initialization like Supabase
    - Or defer init until after app is mounted
 
-3. **Re-add PostHog properly**
+2. **Re-add PostHog properly**
    - Same lazy initialization approach
 
-4. **Verify starting credits**
+3. **Verify starting credits**
    - New users should get 5 tokens via Supabase trigger
 
 ---

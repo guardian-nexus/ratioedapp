@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system/next';
 
 import { supabase } from '@/services/supabase';
 import { AnalysisResponse, Pattern, GroupChatResponse, GroupMemberAnalysis, GroupMemberTag } from '@/types';
@@ -281,9 +281,8 @@ export async function analyzeConversation(
   // Convert images to base64
   const images: ImageContent[] = await Promise.all(
     imageUris.map(async (uri) => {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: 'base64',
-      });
+      const file = new File(uri);
+      const base64 = await file.base64();
 
       // Determine media type from URI
       const extension = uri.split('.').pop()?.toLowerCase();

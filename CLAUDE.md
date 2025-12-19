@@ -6,6 +6,40 @@
 
 ---
 
+## Session Notes (Dec 18, 2025)
+
+### Completed This Session
+1. ✅ **Compare flow improvement** - Results screen → "Compare to another convo?" now:
+   - Shows confirmation dialog ("This will use 1 scan credit")
+   - Pre-fills Person A as locked/already scanned
+   - Only charges 1 token (not 2) since Person A already analyzed
+   - Files changed: `app/scan/results/[id].tsx`, `app/scan/compare.tsx`, `app/scan/analyzing.tsx`
+
+2. ✅ **GitHub repo setup** - https://github.com/guardian-nexus/ratioedapp
+
+3. ✅ **Apple Sign In fixed** - Added bundle ID `com.ratioed.app` to Supabase Apple provider
+
+4. ✅ **expo-file-system deprecation fix** - Migrated from `readAsStringAsync` to new `File` API
+
+### In Progress / Needs Attention
+1. **Edge function timeout** - User getting "network request timed out" with multiple images
+   - In `analyze-scan` edge function, increase timeout from 40000 to 60000:
+     ```typescript
+     const timeoutId = setTimeout(() => controller.abort(), 40000); // Change to 60000
+     ```
+
+2. **Image limit increased** - Changed from 4 to 8 images in edge function
+   - Already updated: `if (images.length > 8)`
+
+3. **Test user credits** - Gave `mrluisito@icloud.com` 999 tokens for testing
+
+### Still TODO (from before)
+1. Re-add RevenueCat with lazy initialization
+2. Re-add PostHog with lazy initialization
+3. Verify new user starting credits (5 tokens via Supabase trigger)
+
+---
+
 ## Project Overview
 Mobile app that analyzes text conversation screenshots to show who's putting in more effort. Built with Expo SDK 54, React Native, Expo Router, Supabase, and Claude API.
 

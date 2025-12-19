@@ -13,7 +13,6 @@
    - Shows confirmation dialog ("This will use 1 scan credit")
    - Pre-fills Person A as locked/already scanned
    - Only charges 1 token (not 2) since Person A already analyzed
-   - Files changed: `app/scan/results/[id].tsx`, `app/scan/compare.tsx`, `app/scan/analyzing.tsx`
 
 2. ✅ **GitHub repo setup** - https://github.com/guardian-nexus/ratioedapp
 
@@ -21,22 +20,26 @@
 
 4. ✅ **expo-file-system deprecation fix** - Migrated from `readAsStringAsync` to new `File` API
 
-### In Progress / Needs Attention
-1. **Edge function timeout** - User getting "network request timed out" with multiple images
-   - In `analyze-scan` edge function, increase timeout from 40000 to 60000:
-     ```typescript
-     const timeoutId = setTimeout(() => controller.abort(), 40000); // Change to 60000
-     ```
+5. ✅ **Edge function timeout** - Increased from 40000 to 60000ms
 
-2. **Image limit increased** - Changed from 4 to 8 images in edge function
-   - Already updated: `if (images.length > 8)`
+6. ✅ **Dynamic wait message** - Shows different messages based on screenshot count (1-2, 3-5, 6-8)
 
-3. **Test user credits** - Gave `mrluisito@icloud.com` 999 tokens for testing
+7. ✅ **RevenueCat re-added** - With lazy initialization to prevent native module crashes
 
-### Still TODO (from before)
-1. Re-add RevenueCat with lazy initialization
-2. Re-add PostHog with lazy initialization
-3. Verify new user starting credits (5 tokens via Supabase trigger)
+8. ✅ **PostHog re-added** - With lazy initialization to prevent native module crashes
+
+9. ✅ **New user starting credits** - Supabase trigger gives 5 tokens on signup
+
+10. ✅ **Security hardening (OWASP MASVS)**:
+    - Atomic token deduction with FOR UPDATE lock (prevents race conditions)
+    - Input validation on count parameter (1-10 only)
+    - CORS restricted to mobile app origins
+    - ErrorBoundary component added
+    - ESLint v9 config added
+
+### Still TODO
+1. **New native build required** - Added RevenueCat and PostHog packages
+2. **Test purchases in TestFlight sandbox**
 
 ---
 
@@ -58,13 +61,10 @@ Mobile app that analyzes text conversation screenshots to show who's putting in 
 - Compare mode, chat export mode, group chat mode
 - Supabase integration (profiles, scans, invites, promo codes)
 
-### What's Stubbed (Needs Re-adding)
-- **RevenueCat** (`react-native-purchases`) - removed from package.json, stubbed in `services/revenuecat/index.ts`
-- **PostHog** (`posthog-react-native`) - removed from package.json, stubbed in `services/analytics/index.ts`
-- Both caused production crashes due to native module initialization timing
-
-### Key Fix Applied
-**Production Crash Fix:** Supabase client was initializing at module load time before SecureStore was ready. Fixed with lazy initialization using Proxy pattern in `services/supabase/index.ts`.
+### Key Fixes Applied
+- **Supabase:** Lazy initialization using Proxy pattern (prevents SecureStore timing crash)
+- **RevenueCat:** Lazy initialization on first use (prevents native module crash)
+- **PostHog:** Lazy initialization on first track call (prevents native module crash)
 
 ---
 
@@ -93,8 +93,8 @@ app/
 - `services/supabase/` - Database, auth, profiles, scans, invites
 - `services/claude/` - Calls Supabase edge functions for AI analysis
 - `services/auth/` - AuthContext provider
-- `services/revenuecat/` - STUBBED - purchases
-- `services/analytics/` - STUBBED - PostHog tracking
+- `services/revenuecat/` - RevenueCat purchases (lazy init)
+- `services/analytics/` - PostHog tracking (lazy init)
 
 ### Supabase Edge Functions (deployed separately)
 - `analyze-scan` - OCR and message extraction via Claude
@@ -128,20 +128,6 @@ eas submit --platform ios --latest
 # Type check
 npx tsc --noEmit
 ```
-
----
-
-## Remaining Tasks
-
-1. **Re-add RevenueCat properly**
-   - Need lazy initialization like Supabase
-   - Or defer init until after app is mounted
-
-2. **Re-add PostHog properly**
-   - Same lazy initialization approach
-
-3. **Verify starting credits**
-   - New users should get 5 tokens via Supabase trigger
 
 ---
 

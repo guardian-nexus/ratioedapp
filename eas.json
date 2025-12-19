@@ -9,7 +9,10 @@
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
         "EXPO_PUBLIC_SUPABASE_URL": "https://kzpjdysofecbzpyeidyn.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6cGpkeXNvZmVjYnpweWVpZHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxMzI3MzEsImV4cCI6MjA3OTcwODczMX0.59Ql3ez7pTVrKpUfaeYz9TuxAGLKpm7xmVW4rgVCEIE"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6cGpkeXNvZmVjYnpweWVpZHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxMzI3MzEsImV4cCI6MjA3OTcwODczMX0.59Ql3ez7pTVrKpUfaeYz9TuxAGLKpm7xmVW4rgVCEIE",
+        "EXPO_PUBLIC_REVENUECAT_API_KEY_IOS": "appl_guelHbivDDVFCmNOrwWDyEnnCCu",
+        "EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID": "test_vRyfgiWXcMifZluLocZwLJbaOgk",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_vsgxSttEluOaiqbJNTrnJ3oavpWgVaANCzjHc7J0Rwl"
       }
     },
     "development": {

@@ -4,22 +4,8 @@ import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { supabase, validateInviteCode, useInviteCode, generateInviteCodes, deleteAccount as deleteUserAccount } from '@/services/supabase';
-// RevenueCat and Analytics disabled until properly configured
-// import { initializePurchases, loginUser, logoutUser } from '@/services/revenuecat';
-// import { identify, reset as resetAnalytics, track, Events } from '@/services/analytics';
-
-const initializePurchases = async (_userId: string) => {};
-const loginUser = async (_userId: string) => {};
-const logoutUser = async () => {};
-const identify = (_userId: string, _traits?: Record<string, unknown>) => {};
-const resetAnalytics = () => {};
-const track = (_event: string, _props?: Record<string, unknown>) => {};
-const Events = {
-  SIGN_IN: 'sign_in',
-  SIGN_UP: 'sign_up',
-  SIGN_OUT: 'sign_out',
-  ACCOUNT_DELETED: 'account_deleted',
-};
+import { initializePurchases, loginUser, logoutUser } from '@/services/revenuecat';
+import { identify, reset as resetAnalytics, track, Events } from '@/services/analytics';
 
 interface AuthContextType {
   user: User | null;

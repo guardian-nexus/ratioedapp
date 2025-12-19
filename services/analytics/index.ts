@@ -1,22 +1,144 @@
-// TEMPORARILY STUBBED - PostHog native module causing production crashes
-// import PostHog from 'posthog-react-native';
+// PostHog Analytics with lazy initialization to prevent native module crashes
+import { PostHog } from 'posthog-react-native';
 
-// Stub type
-type PostHog = unknown;
+const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_API_KEY || '';
+const POSTHOG_HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 
+// Track initialization state
 let posthog: PostHog | null = null;
+let isInitialized = false;
 
-// ALL FUNCTIONS STUBBED
-export function initializeAnalytics(): PostHog | null { return null; }
-export function getPostHog(): PostHog | null { return null; }
-export function identify(_userId: string, _properties?: Record<string, unknown>): void {}
-export function track(event: string, properties?: Record<string, unknown>): void {
-  if (__DEV__) {
-    console.log('[Analytics - Stubbed]', event, properties);
+/**
+ * Lazy initialization - only configures PostHog when first needed
+ * This prevents native module crashes by deferring until app is fully mounted
+ */
+function ensureInitialized(): PostHog | null {
+  if (isInitialized) return posthog;
+
+  try {
+    if (!POSTHOG_API_KEY) {
+      if (__DEV__) {
+        console.warn('PostHog API key not configured');
+      }
+      isInitialized = true;
+      return null;
+    }
+
+    posthog = new PostHog(POSTHOG_API_KEY, {
+      host: POSTHOG_HOST,
+    });
+
+    isInitialized = true;
+
+    if (__DEV__) {
+      console.log('PostHog initialized successfully');
+    }
+
+    return posthog;
+  } catch (error) {
+    if (__DEV__) {
+      console.error('PostHog initialization failed:', error);
+    }
+    isInitialized = true;
+    return null;
   }
 }
-export function screen(_screenName: string, _properties?: Record<string, unknown>): void {}
-export function reset(): void {}
+
+/**
+ * Initialize PostHog (call early in app lifecycle)
+ */
+export function initializeAnalytics(): PostHog | null {
+  return ensureInitialized();
+}
+
+/**
+ * Get PostHog instance
+ */
+export function getPostHog(): PostHog | null {
+  return posthog;
+}
+
+/**
+ * Identify a user
+ */
+export function identify(userId: string, properties?: Record<string, unknown>): void {
+  const ph = ensureInitialized();
+  if (!ph) {
+    if (__DEV__) {
+      console.log('[Analytics] identify:', userId, properties);
+    }
+    return;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ph.identify(userId, properties as any);
+  } catch (error) {
+    if (__DEV__) {
+      console.error('PostHog identify failed:', error);
+    }
+  }
+}
+
+/**
+ * Track an event
+ */
+export function track(event: string, properties?: Record<string, unknown>): void {
+  const ph = ensureInitialized();
+  if (!ph) {
+    if (__DEV__) {
+      console.log('[Analytics]', event, properties);
+    }
+    return;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ph.capture(event, properties as any);
+  } catch (error) {
+    if (__DEV__) {
+      console.error('PostHog track failed:', error);
+    }
+  }
+}
+
+/**
+ * Track a screen view
+ */
+export function screen(screenName: string, properties?: Record<string, unknown>): void {
+  const ph = ensureInitialized();
+  if (!ph) {
+    if (__DEV__) {
+      console.log('[Analytics] screen:', screenName, properties);
+    }
+    return;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ph.screen(screenName, properties as any);
+  } catch (error) {
+    if (__DEV__) {
+      console.error('PostHog screen failed:', error);
+    }
+  }
+}
+
+/**
+ * Reset user identity (on logout)
+ */
+export function reset(): void {
+  const ph = ensureInitialized();
+  if (!ph) return;
+
+  try {
+    ph.reset();
+  } catch (error) {
+    if (__DEV__) {
+      console.error('PostHog reset failed:', error);
+    }
+  }
+}
 
 // Predefined events from spec
 export const Events = {

@@ -53,6 +53,36 @@ export default function Analyzing() {
   const isChatExportMode = params.chatExportMode === '1';
   const isGroupChatMode = params.groupChatMode === '1';
   const { refreshCredits } = useCredits();
+
+  // Calculate image count for dynamic wait message
+  const getImageCount = (): number => {
+    if (isCompareMode) {
+      const imagesA = JSON.parse(params.imagesA || '[]') as string[];
+      const imagesB = JSON.parse(params.imagesB || '[]') as string[];
+      return imagesA.length + imagesB.length;
+    } else if (isCompareWithExisting) {
+      const imagesB = JSON.parse(params.imagesB || '[]') as string[];
+      return imagesB.length;
+    } else if (params.images) {
+      const images = JSON.parse(params.images || '[]') as string[];
+      return images.length;
+    }
+    return 0;
+  };
+
+  const getWaitMessage = (): string => {
+    if (isChatExportMode || isGroupChatMode) {
+      return 'Reading through your conversation...';
+    }
+    const count = getImageCount();
+    if (count <= 2) {
+      return 'This usually takes about a minute';
+    } else if (count <= 5) {
+      return 'This usually takes 1-2 minutes';
+    } else {
+      return 'More screenshots = more to read — hang tight!';
+    }
+  };
   const [currentTip, setCurrentTip] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const hasStarted = useRef(false);
@@ -425,7 +455,7 @@ export default function Analyzing() {
 
         {/* Wait Time Notice */}
         <Text style={styles.waitNotice}>
-          This usually takes 1-2 minutes
+          {getWaitMessage()}
         </Text>
 
         {/* Tips */}

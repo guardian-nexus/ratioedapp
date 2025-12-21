@@ -1,5 +1,30 @@
 # Ratioed Rebuild - Claude Code Context
 
+## Working Style
+
+**Communication Preferences**
+- Direct and practical - Skip the corporate speak, get to the point
+- Slightly dark humor welcome - Honesty with a side of "this is a mess but we'll figure it out"
+- Don't assume, ask - If direction is unclear, clarify don't guess
+- No hand-holding - Collaborator not tutor
+
+**Technical Standards**
+- TypeScript strict mode - Production-ready and secure
+- File headers required - Path and filename commented at top of every file
+- Consistency matters - Review prior work before creating new; don't reinvent wheels
+
+**Project Management**
+- Progress tracking - Running context limit indicator (50%, 75%, 99%)
+- Comprehensive handoffs - Full breakdown when hitting limits
+- File tracking - Always report exact paths of created/modified files
+
+**Testing Flow**
+- Test on Android first (no iPhone currently)
+- Once verified on Android, push to Apple/TestFlight
+- Will switch to iPhone-only testing once device is available
+
+---
+
 ## GitHub
 **Repo:** https://github.com/guardian-nexus/ratioedapp
 - Push after significant changes
@@ -40,6 +65,24 @@
 ### Still TODO
 1. **New native build required** - Added RevenueCat and PostHog packages
 2. **Test purchases in TestFlight sandbox**
+3. **Testing needed:**
+   - Auth flow (signup with invite code, Apple Sign In, login, logout)
+   - Scan flow (upload 1-8 screenshots, analyze, view results)
+   - Compare mode (2 conversations side-by-side)
+   - Token deduction (verify balance decreases correctly)
+   - Token purchase flow (RevenueCat sandbox)
+   - Edge cases (no tokens, invalid invite code, network errors)
+   - Share functionality
+
+### Pre-Launch (Do Right Before Launch)
+1. **PostHog alerts** - Set up webhook/notification for `waitlist_joined` events
+2. **Welcome email** - Send confirmation email to waitlist signups
+3. **Waitlist table columns** - Run SQL to add `source` and `referrer` columns:
+   ```sql
+   ALTER TABLE waitlist
+   ADD COLUMN IF NOT EXISTS source TEXT,
+   ADD COLUMN IF NOT EXISTS referrer TEXT;
+   ```
 
 ---
 

@@ -22,7 +22,7 @@ import GradientText from '@/components/GradientText';
 import { getScan, updateScanLabel } from '@/services/supabase';
 import { track, Events } from '@/services/analytics';
 import { getScoreColor, getScoreLabel, colors, spacing, typography, borderRadius } from '@/theme';
-import { AnalysisResult, Pattern } from '@/types';
+import { AnalysisResult, Pattern, ConversationVibe } from '@/types';
 
 export default function Results() {
   const insets = useSafeAreaInsets();
@@ -278,6 +278,11 @@ export default function Results() {
           </View>
         </View>
 
+        {/* Vibe Card */}
+        {result.vibe && (
+          <VibeCard vibe={result.vibe} />
+        )}
+
         {/* Patterns */}
         {result.patterns && result.patterns.length > 0 && (
           <View style={styles.section}>
@@ -418,6 +423,31 @@ function BreakdownCard({
           ]}
         />
       </View>
+    </View>
+  );
+}
+
+function VibeCard({ vibe }: { vibe: ConversationVibe }) {
+  const vibeColors: Record<string, string> = {
+    'Flirty': colors.gradientStart,
+    'Engaged': colors.scoreGreen,
+    'Balanced': colors.scoreGreen,
+    'Interested': colors.scoreGreen,
+    'Dry': colors.scoreYellow,
+    'Mixed': colors.scoreYellow,
+    'Low Energy': colors.scoreYellow,
+    'Distant': colors.scoreRed,
+  };
+
+  const vibeColor = vibeColors[vibe.vibe] || colors.textSecondary;
+
+  return (
+    <View style={styles.vibeCard}>
+      <View style={styles.vibeHeader}>
+        <Text style={styles.vibeEmoji}>{vibe.emoji}</Text>
+        <Text style={[styles.vibeLabel, { color: vibeColor }]}>{vibe.vibe}</Text>
+      </View>
+      <Text style={styles.vibeDescription}>{vibe.description}</Text>
     </View>
   );
 }
@@ -664,5 +694,31 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Vibe Card styles
+  vibeCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    alignItems: 'center',
+  },
+  vibeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  vibeEmoji: {
+    fontSize: 28,
+  },
+  vibeLabel: {
+    fontSize: typography.xl,
+    fontWeight: typography.bold,
+  },
+  vibeDescription: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

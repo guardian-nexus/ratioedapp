@@ -9,6 +9,7 @@ export interface AnalysisResult {
   createdAt: string;
   chatLabel?: string;
   compareId?: string;
+  vibe?: ConversationVibe; // Phase 1: Conversation vibe/tone
 }
 
 export interface Pattern {
@@ -22,6 +23,14 @@ export interface Breakdown {
   words: { you: number; them: number };
   questions: { you: number; them: number };
   initiations: { you: number; them: number };
+  responseTimes?: { you: number | null; them: number | null }; // avg response time in minutes
+}
+
+// Phase 1: Vibe/tone detection
+export interface ConversationVibe {
+  vibe: string;
+  emoji: string;
+  description: string;
 }
 
 // User/Profile types (matches actual Supabase schema)
@@ -123,6 +132,7 @@ export interface AnalysisResponse {
   summary: string;
   patterns: Pattern[];
   breakdown: Breakdown;
+  vibe?: ConversationVibe; // Phase 1: Conversation vibe/tone
 }
 
 // Compare mode types

@@ -49,6 +49,10 @@ interface Stats {
   themWordCount: number;
   userQuestionCount: number;
   themQuestionCount: number;
+  // Phase 1: Response time analysis
+  userAvgResponseMins: number | null;
+  themAvgResponseMins: number | null;
+  responseTimeRatio: number | null; // user/them - >1 means you're slower
 }
 
 interface InterpretationResult {
@@ -146,6 +150,84 @@ async function callInterpretPatterns(
 // LOCAL COMPUTATION
 // ============================================================================
 
+/**
+ * Parse timestamp string to Date object
+ * Handles formats: "1/15/24, 3:45 PM", "1/15/2024 3:45:00 PM", etc.
+ */
+function parseTimestamp(timestamp: string | null): Date | null {
+  if (!timestamp) return null;
+
+  try {
+    // Try parsing common formats
+    const cleaned = timestamp.trim();
+
+    // Format: 1/15/24, 3:45 PM or 1/15/24 3:45 PM
+    const match = cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+    if (match) {
+      let [, month, day, year, hour, minute, , ampm] = match;
+      let yearNum = parseInt(year);
+      if (yearNum < 100) yearNum += 2000; // Convert 24 to 2024
+
+      let hourNum = parseInt(hour);
+      if (ampm?.toUpperCase() === 'PM' && hourNum !== 12) hourNum += 12;
+      if (ampm?.toUpperCase() === 'AM' && hourNum === 12) hourNum = 0;
+
+      return new Date(yearNum, parseInt(month) - 1, parseInt(day), hourNum, parseInt(minute));
+    }
+
+    // Fallback to Date.parse
+    const parsed = Date.parse(cleaned);
+    if (!isNaN(parsed)) return new Date(parsed);
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calculate average response times for each participant
+ */
+function calculateResponseTimes(messages: Message[]): {
+  userAvgMins: number | null;
+  themAvgMins: number | null;
+} {
+  const userResponseTimes: number[] = [];
+  const themResponseTimes: number[] = [];
+
+  for (let i = 1; i < messages.length; i++) {
+    const prev = messages[i - 1];
+    const curr = messages[i];
+
+    // Skip if same sender (not a response)
+    if (prev.sender === curr.sender) continue;
+
+    const prevTime = parseTimestamp(prev.timestamp);
+    const currTime = parseTimestamp(curr.timestamp);
+
+    if (!prevTime || !currTime) continue;
+
+    const diffMs = currTime.getTime() - prevTime.getTime();
+    // Only count reasonable response times (< 24 hours, > 0)
+    if (diffMs <= 0 || diffMs > 24 * 60 * 60 * 1000) continue;
+
+    const diffMins = diffMs / (1000 * 60);
+
+    if (curr.sender === 'person1') {
+      userResponseTimes.push(diffMins);
+    } else {
+      themResponseTimes.push(diffMins);
+    }
+  }
+
+  const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+  return {
+    userAvgMins: avg(userResponseTimes),
+    themAvgMins: avg(themResponseTimes),
+  };
+}
+
 function computeStats(messages: Message[]): Stats {
   const userMessages = messages.filter((m) => m.sender === 'person1');
   const themMessages = messages.filter((m) => m.sender === 'person2');
@@ -159,6 +241,12 @@ function computeStats(messages: Message[]): Stats {
   const userQuestionCount = userMessages.filter((m) => m.hasQuestion).length;
   const themQuestionCount = themMessages.filter((m) => m.hasQuestion).length;
 
+  // Calculate response times
+  const responseTimes = calculateResponseTimes(messages);
+  const responseTimeRatio = (responseTimes.userAvgMins !== null && responseTimes.themAvgMins !== null && responseTimes.themAvgMins > 0)
+    ? responseTimes.userAvgMins / responseTimes.themAvgMins
+    : null;
+
   return {
     userMessageCount,
     themMessageCount,
@@ -169,11 +257,20 @@ function computeStats(messages: Message[]): Stats {
     messageRatio: themMessageCount > 0 ? userMessageCount / themMessageCount : userMessageCount,
     wordRatio: themWordCount > 0 ? userWordCount / themWordCount : userWordCount,
     questionRatio: themQuestionCount > 0 ? userQuestionCount / themQuestionCount : userQuestionCount,
+    userAvgResponseMins: responseTimes.userAvgMins,
+    themAvgResponseMins: responseTimes.themAvgMins,
+    responseTimeRatio,
   };
 }
 
 function detectPatterns(messages: Message[], stats: Stats): Pattern[] {
   const patterns: Pattern[] = [];
+  const redFlags: Pattern[] = [];
+  const greenFlags: Pattern[] = [];
+
+  // ============================================================================
+  // RED FLAGS 🚩
+  // ============================================================================
 
   // Double texting detection
   let consecutiveUserMessages = 0;
@@ -187,8 +284,8 @@ function detectPatterns(messages: Message[], stats: Stats): Pattern[] {
     }
   }
   if (maxConsecutive >= 3) {
-    patterns.push({
-      title: 'Double Texting',
+    redFlags.push({
+      title: '🚩 Double Texting',
       description: `You sent ${maxConsecutive} messages in a row without a response`,
       sentiment: 'negative',
     });
@@ -198,56 +295,254 @@ function detectPatterns(messages: Message[], stats: Stats): Pattern[] {
   const themMessages = messages.filter((m) => m.sender === 'person2');
   const shortResponses = themMessages.filter((m) => m.text.split(/\s+/).length <= 2);
   if (themMessages.length > 3 && shortResponses.length / themMessages.length > 0.5) {
-    patterns.push({
-      title: 'Short Responses',
-      description: 'They frequently reply with just a few words',
+    redFlags.push({
+      title: '🚩 Dry Texter',
+      description: 'More than half their replies are just a few words',
       sentiment: 'negative',
     });
   }
 
-  // Question imbalance
-  if (stats.userQuestionCount > 0 && stats.themQuestionCount === 0) {
-    patterns.push({
-      title: 'One-Way Questions',
-      description: "You're asking all the questions",
+  // One-way questions (you asking, they never ask)
+  if (stats.userQuestionCount >= 3 && stats.themQuestionCount === 0) {
+    redFlags.push({
+      title: '🚩 No Curiosity',
+      description: "They haven't asked you a single question",
       sentiment: 'negative',
-    });
-  } else if (stats.questionRatio > 2) {
-    patterns.push({
-      title: 'Question Imbalance',
-      description: 'You ask significantly more questions than them',
-      sentiment: 'neutral',
     });
   }
 
-  // Good energy match
+  // Response time: they take way longer
+  if (stats.responseTimeRatio !== null && stats.responseTimeRatio < 0.3 && stats.themAvgResponseMins !== null) {
+    const theirTime = stats.themAvgResponseMins;
+    const timeDesc = theirTime > 60
+      ? `${Math.round(theirTime / 60)} hours`
+      : `${Math.round(theirTime)} min`;
+    redFlags.push({
+      title: '🚩 Slow to Reply',
+      description: `They take ~${timeDesc} to respond on average`,
+      sentiment: 'negative',
+    });
+  }
+
+  // Effort imbalance (user doing way more)
+  if (stats.messageRatio > 2.5) {
+    redFlags.push({
+      title: '🚩 One-Sided Effort',
+      description: "You're carrying this conversation",
+      sentiment: 'negative',
+    });
+  }
+
+  // Late night only texting (check timestamps)
+  const themWithTime = messages.filter((m) => m.sender === 'person2' && m.timestamp);
+  if (themWithTime.length >= 3) {
+    const lateNightCount = themWithTime.filter((m) => {
+      const date = parseTimestamp(m.timestamp);
+      if (!date) return false;
+      const hour = date.getHours();
+      return hour >= 22 || hour < 5; // 10pm - 5am
+    }).length;
+
+    if (lateNightCount / themWithTime.length > 0.7) {
+      redFlags.push({
+        title: '🚩 Late Night Only',
+        description: 'Most of their texts come after 10pm',
+        sentiment: 'negative',
+      });
+    }
+  }
+
+  // ============================================================================
+  // GREEN FLAGS ✅
+  // ============================================================================
+
+  // Balanced energy
   if (stats.messageRatio >= 0.8 && stats.messageRatio <= 1.2 && stats.wordRatio >= 0.7 && stats.wordRatio <= 1.4) {
-    patterns.push({
-      title: 'Balanced Energy',
+    greenFlags.push({
+      title: '✅ Matched Energy',
       description: 'Both sides are putting in similar effort',
       sentiment: 'positive',
     });
   }
 
-  // They're invested
-  if (stats.messageRatio < 0.8) {
-    patterns.push({
-      title: 'They Initiate',
-      description: "They're sending more messages than you",
+  // They ask questions too
+  if (stats.themQuestionCount >= 2 && stats.questionRatio <= 2 && stats.questionRatio >= 0.5) {
+    greenFlags.push({
+      title: '✅ Shows Interest',
+      description: 'They ask you questions back',
       sentiment: 'positive',
     });
   }
 
-  // Effort imbalance (user doing more)
-  if (stats.messageRatio > 2) {
-    patterns.push({
-      title: 'Effort Imbalance',
-      description: "You're sending significantly more messages",
-      sentiment: 'negative',
+  // They're more invested
+  if (stats.messageRatio < 0.7) {
+    greenFlags.push({
+      title: '✅ They Initiate',
+      description: "They're reaching out more than you",
+      sentiment: 'positive',
     });
   }
 
-  return patterns.slice(0, 4); // Max 4 patterns
+  // Response time: they respond quickly
+  if (stats.themAvgResponseMins !== null && stats.themAvgResponseMins < 10) {
+    greenFlags.push({
+      title: '✅ Quick Replies',
+      description: 'They typically respond within 10 minutes',
+      sentiment: 'positive',
+    });
+  }
+
+  // Good message length from them
+  const themWordAvg = themMessages.length > 0
+    ? stats.themWordCount / themMessages.length
+    : 0;
+  if (themWordAvg >= 8 && themMessages.length >= 3) {
+    greenFlags.push({
+      title: '✅ Thoughtful Replies',
+      description: 'They write substantive messages',
+      sentiment: 'positive',
+    });
+  }
+
+  // ============================================================================
+  // NEUTRAL PATTERNS
+  // ============================================================================
+
+  // Question imbalance (not extreme)
+  if (stats.questionRatio > 2 && stats.themQuestionCount > 0) {
+    patterns.push({
+      title: 'Question Imbalance',
+      description: 'You ask more questions than them',
+      sentiment: 'neutral',
+    });
+  }
+
+  // Response time info (neutral case)
+  if (stats.responseTimeRatio !== null && stats.responseTimeRatio >= 0.3 && stats.responseTimeRatio <= 3) {
+    // Roughly similar response times - don't add a pattern, it's normal
+  }
+
+  // ============================================================================
+  // COMBINE: Prioritize red flags, then green flags, then neutral
+  // ============================================================================
+
+  const allPatterns = [...redFlags, ...greenFlags, ...patterns];
+  return allPatterns.slice(0, 4); // Max 4 patterns
+}
+
+// ============================================================================
+// VIBE/TONE DETECTION
+// ============================================================================
+
+type ConversationVibe = {
+  vibe: string;
+  emoji: string;
+  description: string;
+};
+
+function detectVibe(messages: Message[], stats: Stats): ConversationVibe {
+  const themMessages = messages.filter((m) => m.sender === 'person2');
+  const allText = messages.map((m) => m.text).join(' ').toLowerCase();
+  const theirText = themMessages.map((m) => m.text).join(' ').toLowerCase();
+
+  // Emoji patterns
+  const flirtyEmojis = /[😘😍🥰💕❤️💋😏🔥💗💓💖😉🫶]/g;
+  const happyEmojis = /[😂🤣😊😁😆🥹☺️😃😄]/g;
+  const coldEmojis = /[🙄😐😑💀😒]/g;
+
+  const theirFlirtyCount = (theirText.match(flirtyEmojis) || []).length;
+  const theirHappyCount = (theirText.match(happyEmojis) || []).length;
+  const theirColdCount = (theirText.match(coldEmojis) || []).length;
+
+  // Text patterns
+  const flirtyWords = /\b(cute|miss you|thinking of you|can't wait|love|babe|baby|handsome|beautiful|gorgeous)\b/gi;
+  const engagedWords = /\b(tell me more|that's interesting|really\?|omg|no way|haha|lol|lmao)\b/gi;
+  const dryWords = /^(ok|k|sure|fine|cool|yea|yeah|yep|mhm|idk)$/i;
+
+  const theirFlirtyWordCount = (theirText.match(flirtyWords) || []).length;
+  const theirEngagedCount = (theirText.match(engagedWords) || []).length;
+
+  // Check for dry responses
+  const dryResponseCount = themMessages.filter((m) => dryWords.test(m.text.trim())).length;
+  const dryRatio = themMessages.length > 0 ? dryResponseCount / themMessages.length : 0;
+
+  // Average words per message for them
+  const themAvgWords = themMessages.length > 0 ? stats.themWordCount / themMessages.length : 0;
+
+  // Scoring
+  let vibeScore = {
+    flirty: theirFlirtyCount * 2 + theirFlirtyWordCount * 3,
+    engaged: theirHappyCount + theirEngagedCount * 2 + (themAvgWords > 6 ? 3 : 0),
+    dry: dryRatio * 10 + theirColdCount * 2 + (themAvgWords < 3 ? 3 : 0),
+    cold: theirColdCount * 3 + (stats.themAvgResponseMins !== null && stats.themAvgResponseMins > 60 ? 3 : 0),
+  };
+
+  // Determine dominant vibe
+  const maxScore = Math.max(vibeScore.flirty, vibeScore.engaged, vibeScore.dry, vibeScore.cold);
+
+  // If low engagement overall
+  if (maxScore < 2 && stats.messageRatio > 1.5) {
+    return {
+      vibe: 'Low Energy',
+      emoji: '😴',
+      description: "They're not giving much to work with",
+    };
+  }
+
+  if (vibeScore.flirty >= maxScore && vibeScore.flirty >= 3) {
+    return {
+      vibe: 'Flirty',
+      emoji: '🔥',
+      description: 'The energy is definitely there',
+    };
+  }
+
+  if (vibeScore.engaged >= maxScore && vibeScore.engaged >= 3) {
+    return {
+      vibe: 'Engaged',
+      emoji: '💬',
+      description: "They're actively participating",
+    };
+  }
+
+  if (vibeScore.dry >= maxScore && vibeScore.dry >= 4) {
+    return {
+      vibe: 'Dry',
+      emoji: '🏜️',
+      description: 'One-word replies and minimal effort',
+    };
+  }
+
+  if (vibeScore.cold >= maxScore && vibeScore.cold >= 3) {
+    return {
+      vibe: 'Distant',
+      emoji: '❄️',
+      description: 'Something feels off',
+    };
+  }
+
+  // Check balance for neutral vibes
+  if (stats.messageRatio >= 0.8 && stats.messageRatio <= 1.2) {
+    return {
+      vibe: 'Balanced',
+      emoji: '⚖️',
+      description: 'Steady back-and-forth energy',
+    };
+  }
+
+  if (stats.messageRatio < 0.8) {
+    return {
+      vibe: 'Interested',
+      emoji: '👀',
+      description: "They're putting in effort",
+    };
+  }
+
+  return {
+    vibe: 'Mixed',
+    emoji: '🤷',
+    description: 'Hard to read, keep observing',
+  };
 }
 
 function calculateScore(stats: Stats): number {
@@ -333,6 +628,9 @@ export async function analyzeConversation(
     }
   }
 
+  // Step 6: Detect vibe
+  const vibe = detectVibe(ocrResult.messages, stats);
+
   return {
     score,
     label,
@@ -343,7 +641,12 @@ export async function analyzeConversation(
       words: { you: stats.userWordCount, them: stats.themWordCount },
       questions: { you: stats.userQuestionCount, them: stats.themQuestionCount },
       initiations: { you: 0, them: 0 }, // TODO: Calculate initiations if needed
+      responseTimes: {
+        you: stats.userAvgResponseMins,
+        them: stats.themAvgResponseMins,
+      },
     },
+    vibe,
   };
 }
 
@@ -537,6 +840,9 @@ export async function analyzeTextContent(textContent: string): Promise<AnalysisR
   // Get default tagline (skip interpretation for text exports to save API calls)
   const tagline = getDefaultTagline(stats);
 
+  // Detect vibe
+  const vibe = detectVibe(messages, stats);
+
   // Deduct token via edge function
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
@@ -572,7 +878,12 @@ export async function analyzeTextContent(textContent: string): Promise<AnalysisR
       words: { you: stats.userWordCount, them: stats.themWordCount },
       questions: { you: stats.userQuestionCount, them: stats.themQuestionCount },
       initiations: { you: 0, them: 0 },
+      responseTimes: {
+        you: stats.userAvgResponseMins,
+        them: stats.themAvgResponseMins,
+      },
     },
+    vibe,
   };
 }
 

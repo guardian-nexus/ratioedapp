@@ -66,6 +66,15 @@ async function ensureInitialized(): Promise<void> {
         return;
       }
 
+      // Skip initialization for test keys in release builds (prevents crash)
+      // Test keys start with 'test_' - only production keys (appl_, goog_) should be used in releases
+      if (apiKey.startsWith('test_')) {
+        if (__DEV__) {
+          console.warn('RevenueCat: Skipping init - test API key detected. Use production key for releases.');
+        }
+        return;
+      }
+
       if (__DEV__) {
         Purchases.setLogLevel(LOG_LEVEL.DEBUG);
       }

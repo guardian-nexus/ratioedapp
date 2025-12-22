@@ -20,12 +20,14 @@ import Logo from '@/components/Logo';
 import ShareCard from '@/components/ShareCard';
 import GradientButton from '@/components/GradientButton';
 import { getScan } from '@/services/supabase';
+import { useColors } from '@/hooks/useColors';
 import { track, Events } from '@/services/analytics';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 import { AnalysisResult } from '@/types';
 
 export default function Share() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { scanId } = useLocalSearchParams<{ scanId: string }>();
   const viewShotRef = useRef<ViewShot>(null);
 
@@ -195,7 +197,7 @@ export default function Share() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.gradientStart} />
+        <ActivityIndicator size="large" color={defaultColors.gradientStart} />
       </View>
     );
   }
@@ -209,7 +211,7 @@ export default function Share() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -217,7 +219,7 @@ export default function Share() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Logo size={24} />
-          <Text style={styles.headerTitle}>Share</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Share</Text>
         </View>
         <View style={{ width: 24 }} />
       </View>
@@ -237,7 +239,7 @@ export default function Share() {
       </View>
 
       {/* Share Options */}
-      <View style={[styles.actionsContainer, { paddingBottom: insets.bottom + spacing.md }]}>
+      <View style={[styles.actionsContainer, { paddingBottom: insets.bottom + spacing.md, borderTopColor: colors.border }]}>
         <GradientButton
           title="Share to Instagram"
           icon="logo-instagram"
@@ -248,16 +250,16 @@ export default function Share() {
 
         <View style={styles.secondaryActions}>
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, { backgroundColor: colors.surface }]}
             onPress={handleShareGeneral}
             disabled={sharing || saving}
           >
             <Ionicons name="share-outline" size={20} color={colors.text} />
-            <Text style={styles.secondaryButtonText}>More Options</Text>
+            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>More Options</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, { backgroundColor: colors.surface }]}
             onPress={handleSaveToPhotos}
             disabled={sharing || saving}
           >
@@ -266,7 +268,7 @@ export default function Share() {
             ) : (
               <Ionicons name="download-outline" size={20} color={colors.text} />
             )}
-            <Text style={styles.secondaryButtonText}>Save</Text>
+            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Save</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -277,14 +279,14 @@ export default function Share() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   errorText: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.md,
   },
   header: {
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.lg,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
   previewContainer: {
     flex: 1,
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
   actionsContainer: {
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: defaultColors.border,
     gap: spacing.md,
   },
   secondaryActions: {
@@ -326,13 +328,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
   },
   secondaryButtonText: {
     fontSize: typography.sm,
-    color: colors.text,
+    color: defaultColors.text,
     fontWeight: '500',
   },
 });

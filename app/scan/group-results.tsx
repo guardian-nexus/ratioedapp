@@ -13,11 +13,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import Logo from '@/components/Logo';
 import GradientButton from '@/components/GradientButton';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 import { GroupChatResponse, GroupMemberAnalysis, GroupMemberTag } from '@/types';
 
 export default function GroupResults() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const params = useLocalSearchParams<{ data?: string; label?: string }>();
 
   // Parse the data from params
@@ -46,11 +48,11 @@ export default function GroupResults() {
   const getTagColor = (sentiment: GroupMemberTag['sentiment']) => {
     switch (sentiment) {
       case 'positive':
-        return colors.success;
+        return defaultColors.success;
       case 'negative':
-        return colors.gradientStart;
+        return defaultColors.gradientStart;
       default:
-        return colors.textSecondary;
+        return defaultColors.textSecondary;
     }
   };
 
@@ -127,7 +129,7 @@ export default function GroupResults() {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
@@ -144,7 +146,7 @@ export default function GroupResults() {
       >
         {/* Title */}
         <View style={styles.titleSection}>
-          <Ionicons name="people" size={32} color={colors.gradientStart} />
+          <Ionicons name="people" size={32} color={defaultColors.gradientStart} />
           <Text style={styles.title}>{params.label || 'Group Chat'}</Text>
           <Text style={styles.subtitle}>
             {data.totalParticipants} people · {data.totalMessages} messages
@@ -153,7 +155,7 @@ export default function GroupResults() {
 
         {/* Summary Card */}
         <LinearGradient
-          colors={[colors.gradientStart, colors.gradientEnd]}
+          colors={[defaultColors.gradientStart, defaultColors.gradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.summaryCard}
@@ -196,7 +198,7 @@ export default function GroupResults() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -214,13 +216,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.lg,
-    color: colors.text,
+    color: defaultColors.text,
     textAlign: 'center',
     marginTop: spacing.xl,
   },
   backLink: {
     fontSize: typography.md,
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
     textAlign: 'center',
     marginTop: spacing.md,
   },
@@ -231,12 +233,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.xl,
     fontWeight: typography.bold,
-    color: colors.text,
+    color: defaultColors.text,
     marginTop: spacing.sm,
   },
   subtitle: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     marginTop: spacing.xs,
   },
   summaryCard: {
@@ -247,7 +249,7 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: typography.lg,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
     textAlign: 'center',
   },
   highlightsSection: {
@@ -256,7 +258,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.md,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
     marginBottom: spacing.md,
   },
   highlightItem: {
@@ -265,20 +267,20 @@ const styles = StyleSheet.create({
   },
   highlightBullet: {
     fontSize: typography.md,
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
     marginRight: spacing.sm,
   },
   highlightText: {
     flex: 1,
     fontSize: typography.md,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     lineHeight: 22,
   },
   leaderboardSection: {
     marginBottom: spacing.lg,
   },
   memberCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -291,7 +293,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.sm,
@@ -305,11 +307,11 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: typography.md,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   memberPercentage: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   memberStats: {
     alignItems: 'center',
@@ -317,11 +319,11 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: typography.lg,
     fontWeight: typography.bold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   statLabel: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: defaultColors.border,
   },
   detailStat: {
     flex: 1,
@@ -359,16 +361,16 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: typography.sm,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   detailLabel: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   bottomCta: {
     padding: spacing.lg,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: defaultColors.border,
   },
 });

@@ -23,10 +23,12 @@ import Logo from '@/components/Logo';
 import CreditBadge from '@/components/CreditBadge';
 import { useAuth } from '@/services/auth';
 import { useCredits } from '@/hooks/useCredits';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useColors } from '@/hooks/useColors';
 import { getInviteCodes, deleteAllScans, redeemPromoCode } from '@/services/supabase';
 import { restorePurchases } from '@/services/revenuecat';
 import { track, Events } from '@/services/analytics';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { spacing, typography, borderRadius, colors as defaultColors } from '@/theme';
 
 interface InviteCode {
   id: string;
@@ -39,6 +41,8 @@ export default function Settings() {
   const insets = useSafeAreaInsets();
   const { user, signOut, deleteAccount } = useAuth();
   const { credits, isSubscribed, refreshCredits } = useCredits();
+  const { mode, setMode } = useTheme();
+  const colors = useColors();
 
   const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(true);
@@ -48,6 +52,8 @@ export default function Settings() {
   const [redeemingPromo, setRedeemingPromo] = useState(false);
 
   const appVersion = Constants.expoConfig?.version || '1.0.0';
+
+  const themeModeLabel = mode === 'system' ? 'System' : mode === 'light' ? 'Light' : 'Dark';
 
   // App Store ID - replace with your actual App Store ID when available
   const APP_STORE_ID = 'YOUR_APP_STORE_ID';
@@ -230,6 +236,19 @@ export default function Settings() {
     Linking.openURL('mailto:support@ratioed.app?subject=Ratioed Support');
   };
 
+  const handleThemeChange = () => {
+    Alert.alert(
+      'Appearance',
+      'Choose your preferred theme',
+      [
+        { text: 'Light', onPress: () => setMode('light') },
+        { text: 'Dark', onPress: () => setMode('dark') },
+        { text: 'System', onPress: () => setMode('system') },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
   const renderSettingsRow = (
     icon: string,
     title: string,
@@ -242,7 +261,7 @@ export default function Settings() {
     }
   ) => (
     <TouchableOpacity
-      style={styles.settingsRow}
+      style={[styles.settingsRow, { borderBottomColor: colors.border }]}
       onPress={onPress}
       disabled={options?.loading}
     >
@@ -252,14 +271,14 @@ export default function Settings() {
           size={20}
           color={options?.color || colors.text}
         />
-        <Text style={[styles.settingsRowText, options?.color && { color: options.color }]}>
+        <Text style={[styles.settingsRowText, { color: options?.color || colors.text }]}>
           {title}
         </Text>
       </View>
       {options?.loading ? (
         <ActivityIndicator size="small" color={colors.textSecondary} />
       ) : options?.rightText ? (
-        <Text style={styles.settingsRowRight}>{options.rightText}</Text>
+        <Text style={[styles.settingsRowRight, { color: colors.textSecondary }]}>{options.rightText}</Text>
       ) : options?.showArrow !== false ? (
         <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
       ) : null}
@@ -267,7 +286,7 @@ export default function Settings() {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -275,7 +294,7 @@ export default function Settings() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Logo size={24} />
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
         </View>
         <View style={{ width: 24 }} />
       </View>
@@ -286,7 +305,7 @@ export default function Settings() {
         showsVerticalScrollIndicator={false}
       >
         {/* Account Card */}
-        <View style={styles.accountCard}>
+        <View style={[styles.accountCard, { backgroundColor: colors.surface }]}>
           <LinearGradient
             colors={[colors.gradientStart + '20', colors.gradientEnd + '10']}
             start={{ x: 0, y: 0 }}
@@ -294,7 +313,7 @@ export default function Settings() {
             style={styles.accountGradient}
           />
           <View style={styles.accountInfo}>
-            <Text style={styles.accountEmail}>{user?.email || 'No email'}</Text>
+            <Text style={[styles.accountEmail, { color: colors.text }]}>{user?.email || 'No email'}</Text>
             <View style={styles.accountBadge}>
               <CreditBadge credits={credits} isSubscribed={isSubscribed} />
             </View>
@@ -328,9 +347,9 @@ export default function Settings() {
 
         {/* Invite Friends Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>INVITE FRIENDS</Text>
-          <View style={styles.sectionCard}>
-            <Text style={styles.inviteInfo}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>INVITE FRIENDS</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.inviteInfo, { color: colors.textSecondary }]}>
               Share your invite codes with friends. When they sign up, you both get 5 free scans!
             </Text>
 
@@ -343,6 +362,7 @@ export default function Settings() {
                     key={invite.id}
                     style={[
                       styles.inviteCodeRow,
+                      { backgroundColor: colors.background },
                       invite.usedBy && styles.inviteCodeUsed,
                     ]}
                     onPress={() => !invite.usedBy && handleShareInviteCode(invite.code)}
@@ -350,12 +370,13 @@ export default function Settings() {
                   >
                     <Text style={[
                       styles.inviteCode,
+                      { color: colors.text },
                       invite.usedBy && styles.inviteCodeTextUsed,
                     ]}>
                       {invite.code}
                     </Text>
                     {invite.usedBy ? (
-                      <Text style={styles.inviteCodeStatus}>Used</Text>
+                      <Text style={[styles.inviteCodeStatus, { color: colors.textMuted }]}>Used</Text>
                     ) : (
                       <Ionicons name="share-outline" size={18} color={colors.gradientStart} />
                     )}
@@ -363,15 +384,15 @@ export default function Settings() {
                 ))}
               </View>
             ) : (
-              <Text style={styles.noCodesText}>No invite codes available</Text>
+              <Text style={[styles.noCodesText, { color: colors.textMuted }]}>No invite codes available</Text>
             )}
           </View>
         </View>
 
         {/* Purchases Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PURCHASES</Text>
-          <View style={styles.sectionCard}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>PURCHASES</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
             {renderSettingsRow(
               'refresh',
               'Restore Purchases',
@@ -388,21 +409,34 @@ export default function Settings() {
 
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>DATA</Text>
-          <View style={styles.sectionCard}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>DATA</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
             {renderSettingsRow(
               'trash-outline',
               'Clear All History',
               handleClearHistory,
-              { color: colors.error, showArrow: false }
+              { color: defaultColors.error, showArrow: false }
+            )}
+          </View>
+        </View>
+
+        {/* Appearance Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>APPEARANCE</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+            {renderSettingsRow(
+              'contrast-outline',
+              'Theme',
+              handleThemeChange,
+              { rightText: themeModeLabel }
             )}
           </View>
         </View>
 
         {/* Support Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SUPPORT</Text>
-          <View style={styles.sectionCard}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>SUPPORT</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
             {renderSettingsRow(
               'star-outline',
               'Rate the App',
@@ -428,8 +462,8 @@ export default function Settings() {
 
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACCOUNT</Text>
-          <View style={styles.sectionCard}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>ACCOUNT</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
             {renderSettingsRow(
               'log-out-outline',
               'Sign Out',
@@ -440,7 +474,7 @@ export default function Settings() {
               'person-remove-outline',
               'Delete Account',
               handleDeleteAccount,
-              { color: colors.error, showArrow: false }
+              { color: defaultColors.error, showArrow: false }
             )}
           </View>
         </View>
@@ -448,7 +482,7 @@ export default function Settings() {
         {/* Version */}
         <View style={styles.versionContainer}>
           <Logo size={24} />
-          <Text style={styles.versionText}>Version {appVersion}</Text>
+          <Text style={[styles.versionText, { color: colors.textMuted }]}>Version {appVersion}</Text>
         </View>
       </ScrollView>
 
@@ -460,16 +494,16 @@ export default function Settings() {
         onRequestClose={() => setPromoModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Enter Promo Code</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Enter Promo Code</Text>
               <TouchableOpacity onPress={() => setPromoModalVisible(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <TextInput
-              style={styles.promoInput}
+              style={[styles.promoInput, { backgroundColor: colors.background, color: colors.text }]}
               placeholder="Enter code"
               placeholderTextColor={colors.textMuted}
               value={promoCode}
@@ -506,7 +540,7 @@ export default function Settings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -523,7 +557,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.lg,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
   scrollView: {
     flex: 1,
@@ -532,7 +566,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   accountCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -553,7 +587,7 @@ const styles = StyleSheet.create({
   },
   accountEmail: {
     fontSize: typography.md,
-    color: colors.text,
+    color: defaultColors.text,
     flex: 1,
   },
   accountBadge: {
@@ -567,7 +601,7 @@ const styles = StyleSheet.create({
   },
   subscriptionText: {
     fontSize: typography.sm,
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
     fontWeight: '600',
   },
   section: {
@@ -575,14 +609,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     fontWeight: '600',
     letterSpacing: 1,
     marginBottom: spacing.sm,
     paddingLeft: spacing.sm,
   },
   sectionCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
   },
@@ -592,7 +626,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: defaultColors.border,
   },
   settingsRowLeft: {
     flexDirection: 'row',
@@ -601,11 +635,11 @@ const styles = StyleSheet.create({
   },
   settingsRowText: {
     fontSize: typography.md,
-    color: colors.text,
+    color: defaultColors.text,
   },
   settingsRowRight: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
   },
   getMoreButton: {
     borderRadius: borderRadius.lg,
@@ -621,13 +655,13 @@ const styles = StyleSheet.create({
   getMoreText: {
     fontSize: typography.md,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
     flex: 1,
     marginLeft: spacing.sm,
   },
   inviteInfo: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     lineHeight: 20,
     padding: spacing.md,
     paddingBottom: 0,
@@ -640,7 +674,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginTop: spacing.sm,
@@ -651,7 +685,7 @@ const styles = StyleSheet.create({
   inviteCode: {
     fontSize: typography.md,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
     letterSpacing: 2,
   },
   inviteCodeTextUsed: {
@@ -659,11 +693,11 @@ const styles = StyleSheet.create({
   },
   inviteCodeStatus: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   noCodesText: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     textAlign: 'center',
     padding: spacing.md,
   },
@@ -674,7 +708,7 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   modalOverlay: {
     flex: 1,
@@ -684,7 +718,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   modalContent: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     width: '100%',
@@ -699,14 +733,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: typography.lg,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
   promoInput: {
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: typography.md,
-    color: colors.text,
+    color: defaultColors.text,
     textAlign: 'center',
     letterSpacing: 2,
     marginBottom: spacing.lg,
@@ -726,6 +760,6 @@ const styles = StyleSheet.create({
   redeemButtonText: {
     fontSize: typography.md,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
 });

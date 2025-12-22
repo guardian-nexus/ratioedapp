@@ -19,6 +19,7 @@ import Logo from '@/components/Logo';
 import GradientButton from '@/components/GradientButton';
 import CreditBadge from '@/components/CreditBadge';
 import { useCredits } from '@/hooks/useCredits';
+import { useColors } from '@/hooks/useColors';
 import {
   getProducts,
   purchaseProduct,
@@ -27,7 +28,7 @@ import {
 } from '@/services/revenuecat';
 import { validatePromoCode, redeemPromoCode } from '@/services/supabase';
 import { track, Events } from '@/services/analytics';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 
 interface ProductOption {
   id: string;
@@ -72,6 +73,7 @@ const PRODUCT_OPTIONS: ProductOption[] = [
 
 export default function Tokens() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { credits, isSubscribed, refreshCredits } = useCredits();
 
   const [loading, setLoading] = useState(false);
@@ -185,6 +187,7 @@ export default function Tokens() {
         key={product.id}
         style={[
           styles.productCard,
+          { backgroundColor: colors.surface },
           product.bestValue && styles.productCardBestValue,
         ]}
         onPress={() => handlePurchase(product.id, product.tokens)}
@@ -211,9 +214,9 @@ export default function Tokens() {
                 <Ionicons name="diamond" size={20} color={colors.gradientStart} />
               </View>
             )}
-            <Text style={styles.productTitle}>{product.title}</Text>
+            <Text style={[styles.productTitle, { color: colors.text }]}>{product.title}</Text>
           </View>
-          <Text style={styles.productSubtitle}>{product.subtitle}</Text>
+          <Text style={[styles.productSubtitle, { color: colors.textSecondary }]}>{product.subtitle}</Text>
         </View>
 
         <View style={styles.productPrice}>
@@ -228,7 +231,7 @@ export default function Tokens() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -236,7 +239,7 @@ export default function Tokens() {
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Logo size={24} />
-          <Text style={styles.headerTitle}>Store</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Store</Text>
         </View>
         <CreditBadge credits={credits} isSubscribed={isSubscribed} />
       </View>
@@ -256,8 +259,8 @@ export default function Tokens() {
           >
             <Ionicons name="diamond" size={32} color={colors.text} />
           </LinearGradient>
-          <Text style={styles.heroTitle}>Get More Scans</Text>
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Get More Scans</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
             Keep analyzing your conversations
           </Text>
         </View>
@@ -297,7 +300,7 @@ export default function Tokens() {
         onRequestClose={() => setShowPromoModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <TouchableOpacity
               style={styles.modalClose}
               onPress={() => setShowPromoModal(false)}
@@ -305,10 +308,10 @@ export default function Tokens() {
               <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
 
-            <Text style={styles.modalTitle}>Enter Promo Code</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Enter Promo Code</Text>
 
             <TextInput
-              style={styles.promoInput}
+              style={[styles.promoInput, { backgroundColor: colors.background, color: colors.text }]}
               placeholder="PROMO123"
               placeholderTextColor={colors.textMuted}
               value={promoCode}
@@ -334,7 +337,7 @@ export default function Tokens() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -351,7 +354,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.lg,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   scrollView: {
     flex: 1,
@@ -374,19 +377,19 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: typography.xl,
     fontWeight: '700',
-    color: colors.text,
+    color: defaultColors.text,
     marginBottom: spacing.xs,
   },
   heroSubtitle: {
     fontSize: typography.md,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
   },
   productsContainer: {
     gap: spacing.md,
     marginBottom: spacing.xl,
   },
   productCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     flexDirection: 'row',
@@ -397,7 +400,7 @@ const styles = StyleSheet.create({
   },
   productCardBestValue: {
     borderWidth: 2,
-    borderColor: colors.gradientStart,
+    borderColor: defaultColors.gradientStart,
   },
   bestValueBadge: {
     position: 'absolute',
@@ -410,7 +413,7 @@ const styles = StyleSheet.create({
   bestValueText: {
     fontSize: typography.xs,
     fontWeight: '700',
-    color: colors.text,
+    color: defaultColors.text,
   },
   productInfo: {
     flex: 1,
@@ -430,11 +433,11 @@ const styles = StyleSheet.create({
   productTitle: {
     fontSize: typography.lg,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
   productSubtitle: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     marginLeft: 32,
   },
   productPrice: {
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: typography.lg,
     fontWeight: '700',
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
   },
   linksContainer: {
     alignItems: 'center',
@@ -457,7 +460,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -467,7 +470,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   modalContent: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.xl,
     width: '100%',
@@ -481,16 +484,16 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: typography.lg,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
   promoInput: {
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: typography.lg,
-    color: colors.text,
+    color: defaultColors.text,
     textAlign: 'center',
     letterSpacing: 2,
     marginBottom: spacing.lg,

@@ -3,7 +3,8 @@ import { TouchableOpacity, Text, StyleSheet, ViewStyle, ActivityIndicator } from
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 
 interface GradientButtonProps {
   title: string;
@@ -26,6 +27,7 @@ export default function GradientButton({
   variant = 'filled',
   badge,
 }: GradientButtonProps) {
+  const colors = useColors();
   const isDisabled = disabled || loading;
 
   if (variant === 'outline') {
@@ -33,7 +35,7 @@ export default function GradientButton({
       <TouchableOpacity
         onPress={onPress}
         disabled={isDisabled}
-        style={[styles.outlineContainer, isDisabled && styles.disabled, style]}
+        style={[styles.outlineContainer, { borderColor: colors.gradientStart }, isDisabled && styles.disabled, style]}
         activeOpacity={0.8}
       >
         {icon && (
@@ -44,9 +46,9 @@ export default function GradientButton({
             style={styles.icon}
           />
         )}
-        <Text style={styles.outlineText}>{title}</Text>
+        <Text style={[styles.outlineText, { color: colors.text }]}>{title}</Text>
         {badge && (
-          <Text style={styles.badge}>{badge}</Text>
+          <Text style={[styles.badge, { color: colors.textSecondary }]}>{badge}</Text>
         )}
       </TouchableOpacity>
     );
@@ -98,7 +100,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   text: {
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.md,
     fontWeight: typography.semibold,
   },
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
   outlineContainer: {
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: defaultColors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -120,13 +122,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   outlineText: {
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.md,
     fontWeight: typography.medium,
   },
   badge: {
     marginLeft: spacing.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.sm,
   },
 });

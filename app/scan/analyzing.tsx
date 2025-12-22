@@ -7,15 +7,17 @@ import Logo from '@/components/Logo';
 import { analyzeConversation, analyzeTextContent, analyzeGroupChat, getErrorMessage, isMaintenanceError } from '@/services/claude';
 import { saveScan } from '@/services/supabase';
 import { useCredits } from '@/hooks/useCredits';
+import { useColors } from '@/hooks/useColors';
 import { track, Events, trackScanStarted, trackScanCompleted, trackError } from '@/services/analytics';
-import { colors, spacing, typography } from '@/theme';
+import { colors as defaultColors, spacing, typography } from '@/theme';
 import { GroupChatResponse } from '@/types';
 
 // Note: Token deduction happens server-side in the analyze-scan edge function
 
 const TIPS = [
   'Upload up to 8 screenshots for better analysis',
-  'Android users can use "Scroll capture" for longer convos',
+  // TODO: Uncomment when targeting Android
+  // 'Android users can use "Scroll capture" for longer convos',
   'Works best with 1-on-1 conversations',
   'The more messages, the more accurate the score',
   'Share your results to see what friends think',
@@ -52,6 +54,7 @@ export default function Analyzing() {
   const isCompareWithExisting = params.compareWithExisting === '1';
   const isChatExportMode = params.chatExportMode === '1';
   const isGroupChatMode = params.groupChatMode === '1';
+  const colors = useColors();
   const { refreshCredits } = useCredits();
 
   // Calculate image count for dynamic wait message
@@ -164,6 +167,19 @@ export default function Analyzing() {
         Alert.alert('Not Enough Credits', message, [
           { text: 'Get More', onPress: () => router.replace('/store/tokens') },
         ]);
+        return;
+      }
+
+      // Handle rate limiting with retry option
+      if (error instanceof Error && error.message === 'RATE_LIMITED') {
+        Alert.alert(
+          'High Demand',
+          "We're experiencing high traffic right now. Want to try again?",
+          [
+            { text: 'Go Back', style: 'cancel', onPress: () => router.back() },
+            { text: 'Try Again', onPress: () => runAnalysis() },
+          ]
+        );
         return;
       }
 
@@ -408,11 +424,11 @@ export default function Analyzing() {
       <View key={index} style={styles.stepRow}>
         <View style={styles.stepIconContainer}>
           {isCompleted ? (
-            <Ionicons name="checkmark-circle" size={22} color={colors.success} />
+            <Ionicons name="checkmark-circle" size={22} color={defaultColors.success} />
           ) : isActive ? (
-            <Ionicons name="arrow-forward-circle" size={22} color={colors.gradientStart} />
+            <Ionicons name="arrow-forward-circle" size={22} color={defaultColors.gradientStart} />
           ) : (
-            <Ionicons name="ellipse-outline" size={22} color={colors.textMuted} />
+            <Ionicons name="ellipse-outline" size={22} color={defaultColors.textMuted} />
           )}
         </View>
         <Text
@@ -430,7 +446,7 @@ export default function Analyzing() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         {/* Pulsing Logo with Glow */}
         <View style={styles.logoWrapper}>
@@ -471,7 +487,7 @@ export default function Analyzing() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -490,7 +506,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: colors.gradientStart,
+    backgroundColor: defaultColors.gradientStart,
   },
   stepsContainer: {
     alignItems: 'flex-start',
@@ -507,19 +523,19 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: typography.md,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     marginLeft: spacing.sm,
   },
   stepCompleted: {
-    color: colors.success,
+    color: defaultColors.success,
   },
   stepActive: {
-    color: colors.text,
+    color: defaultColors.text,
     fontWeight: typography.medium,
   },
   tipContainer: {
     marginTop: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: 12,
     padding: spacing.lg,
     maxWidth: 300,
@@ -527,21 +543,21 @@ const styles = StyleSheet.create({
   },
   tipLabel: {
     fontSize: typography.sm,
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
     fontWeight: typography.semibold,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   tipText: {
     fontSize: typography.sm,
-    color: colors.text,
+    color: defaultColors.text,
     textAlign: 'center',
     lineHeight: 20,
     fontStyle: 'italic',
   },
   waitNotice: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.md,
   },

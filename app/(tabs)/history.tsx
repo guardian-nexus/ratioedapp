@@ -15,7 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import Logo from '@/components/Logo';
 import { getScanHistory, deleteScan, deleteAllScans } from '@/services/supabase';
-import { getScoreColor, getScoreLabel, colors, spacing, typography, borderRadius } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import { getScoreColor, getScoreLabel, colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 import { AnalysisResult } from '@/types';
 
 // Unified history item type
@@ -25,6 +26,7 @@ type HistoryItem =
 
 export default function History() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const [scans, setScans] = useState<AnalysisResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -191,16 +193,16 @@ export default function History() {
 
     return (
       <TouchableOpacity
-        style={styles.scanCard}
+        style={[styles.scanCard, { backgroundColor: colors.surface }]}
         onPress={() => router.push(`/scan/results/${scan.id}`)}
         onLongPress={() => handleDeleteScan(scan.id, scan.chatLabel)}
         activeOpacity={0.7}
       >
         <View style={styles.scanHeader}>
-          <Text style={styles.scanLabel} numberOfLines={1}>
+          <Text style={[styles.scanLabel, { color: colors.text }]} numberOfLines={1}>
             {scan.chatLabel || 'Untitled'}
           </Text>
-          <Text style={styles.scanDate}>{formatDate(scan.createdAt)}</Text>
+          <Text style={[styles.scanDate, { color: colors.textMuted }]}>{formatDate(scan.createdAt)}</Text>
         </View>
         <View style={styles.scanContent}>
           <View style={styles.scoreContainer}>
@@ -211,7 +213,7 @@ export default function History() {
               <Text style={[styles.labelText, { color: scoreColor }]}>{label}</Text>
             </View>
           </View>
-          <Text style={styles.summaryText} numberOfLines={2}>
+          <Text style={[styles.summaryText, { color: colors.textSecondary }]} numberOfLines={2}>
             {scan.summary}
           </Text>
         </View>
@@ -227,7 +229,7 @@ export default function History() {
 
     return (
       <TouchableOpacity
-        style={styles.compareCard}
+        style={[styles.compareCard, { backgroundColor: colors.surface }]}
         onPress={() =>
           router.push({
             pathname: '/scan/compare-results',
@@ -254,22 +256,22 @@ export default function History() {
         </LinearGradient>
 
         <View style={styles.scanHeader}>
-          <Text style={styles.scanLabel} numberOfLines={1}>
+          <Text style={[styles.scanLabel, { color: colors.text }]} numberOfLines={1}>
             {labelA} vs {labelB}
           </Text>
-          <Text style={styles.scanDate}>{formatDate(scanA.createdAt)}</Text>
+          <Text style={[styles.scanDate, { color: colors.textMuted }]}>{formatDate(scanA.createdAt)}</Text>
         </View>
 
         <View style={styles.compareScores}>
           <View style={styles.compareScoreItem}>
-            <Text style={styles.comparePersonLabel}>{labelA}</Text>
+            <Text style={[styles.comparePersonLabel, { color: colors.textSecondary }]}>{labelA}</Text>
             <Text style={[styles.compareScore, { color: getScoreColor(scanA.score) }]}>
               {scanA.score}
             </Text>
           </View>
-          <Text style={styles.vsText}>vs</Text>
+          <Text style={[styles.vsText, { color: colors.textMuted }]}>vs</Text>
           <View style={styles.compareScoreItem}>
-            <Text style={styles.comparePersonLabel}>{labelB}</Text>
+            <Text style={[styles.comparePersonLabel, { color: colors.textSecondary }]}>{labelB}</Text>
             <Text style={[styles.compareScore, { color: getScoreColor(scanB.score) }]}>
               {scanB.score}
             </Text>
@@ -297,16 +299,16 @@ export default function History() {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Logo size={28} />
-          <Text style={styles.headerTitle}>History</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>History</Text>
         </View>
         {scans.length > 0 && (
           <TouchableOpacity onPress={handleClearAll}>
-            <Text style={styles.clearText}>Clear All</Text>
+            <Text style={[styles.clearText, { color: colors.gradientStart }]}>Clear All</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -339,7 +341,7 @@ export default function History() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -356,11 +358,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.xl,
     fontWeight: typography.bold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   clearText: {
     fontSize: typography.sm,
-    color: colors.error,
+    color: defaultColors.error,
   },
   listContent: {
     padding: spacing.lg,
@@ -369,7 +371,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scanCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -383,13 +385,13 @@ const styles = StyleSheet.create({
   scanLabel: {
     fontSize: typography.md,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
     flex: 1,
     marginRight: spacing.sm,
   },
   scanDate: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   scanContent: {
     flexDirection: 'row',
@@ -416,7 +418,7 @@ const styles = StyleSheet.create({
   summaryText: {
     flex: 1,
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     lineHeight: 20,
   },
   emptyContainer: {
@@ -428,22 +430,22 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: typography.lg,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
     marginTop: spacing.md,
   },
   emptySubtitle: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     marginTop: spacing.sm,
     textAlign: 'center',
   },
   compareCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.gradientStart + '40',
+    borderColor: defaultColors.gradientStart + '40',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -461,7 +463,7 @@ const styles = StyleSheet.create({
   compareBadgeText: {
     fontSize: 9,
     fontWeight: '700',
-    color: colors.background,
+    color: defaultColors.background,
   },
   compareScores: {
     flexDirection: 'row',
@@ -476,7 +478,7 @@ const styles = StyleSheet.create({
   },
   comparePersonLabel: {
     fontSize: typography.xs,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     marginBottom: 2,
   },
   compareScore: {
@@ -485,7 +487,7 @@ const styles = StyleSheet.create({
   },
   vsText: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     fontWeight: '600',
   },
 });

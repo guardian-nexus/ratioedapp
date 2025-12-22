@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
-import { AnalysisResult, AnalysisResponse, Pattern } from '@/types';
+import { AnalysisResult, AnalysisResponse, Pattern, ConversationVibe } from '@/types';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -52,6 +52,7 @@ interface ScanRow {
   created_at: string;
   label: string | null;
   compare_id: string | null;
+  vibe: ConversationVibe | null;
 }
 
 interface ProfileRow {
@@ -108,6 +109,7 @@ export async function saveScan(
     message_count: messageCount,
     screenshot_count: screenshotCount,
     label,
+    vibe: result.vibe || null,
   };
 
   // Add compare_id if provided
@@ -173,6 +175,78 @@ export async function deleteScan(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// Get scans with the same label for trend tracking
+export async function getScansByLabel(label: string, excludeId?: string): Promise<AnalysisResult[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !label) return [];
+
+  let query = supabase
+    .from('scans')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('label', label)
+    .order('created_at', { ascending: true });
+
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const { data, error } = await query;
+
+  if (error || !data) return [];
+  return (data as ScanRow[]).map(scanRowToAnalysisResult);
+}
+
+// Get trend data for a conversation
+export interface TrendData {
+  previousScans: AnalysisResult[];
+  trend: 'improving' | 'declining' | 'stable' | 'new';
+  averageScore: number;
+  scoreChange: number; // difference from previous scan
+}
+
+export async function getTrendData(scanId: string, label: string | undefined): Promise<TrendData | null> {
+  if (!label) return null;
+
+  const previousScans = await getScansByLabel(label, scanId);
+
+  if (previousScans.length === 0) {
+    return {
+      previousScans: [],
+      trend: 'new',
+      averageScore: 0,
+      scoreChange: 0,
+    };
+  }
+
+  // Get current scan to compare
+  const currentScan = await getScan(scanId);
+  if (!currentScan) return null;
+
+  // Calculate average score across previous scans
+  const totalScore = previousScans.reduce((sum, scan) => sum + scan.score, 0);
+  const averageScore = Math.round(totalScore / previousScans.length);
+
+  // Get most recent previous scan for comparison
+  const mostRecentPrevious = previousScans[previousScans.length - 1];
+  const scoreChange = currentScan.score - mostRecentPrevious.score;
+
+  // Determine trend
+  let trend: TrendData['trend'] = 'stable';
+  if (scoreChange >= 10) {
+    trend = 'improving';
+  } else if (scoreChange <= -10) {
+    trend = 'declining';
+  }
+
+  return {
+    previousScans,
+    trend,
+    averageScore,
+    scoreChange,
+  };
+}
+
 // Delete all scans for user
 export async function deleteAllScans(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -198,6 +272,7 @@ function scanRowToAnalysisResult(scan: ScanRow): AnalysisResult {
     createdAt: scan.created_at,
     chatLabel: scan.label || undefined,
     compareId: scan.compare_id || undefined,
+    vibe: scan.vibe || undefined,
   };
 }
 

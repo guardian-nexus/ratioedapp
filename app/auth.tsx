@@ -18,11 +18,13 @@ import Logo from '@/components/Logo';
 import GradientButton from '@/components/GradientButton';
 import { useAuth } from '@/services/auth';
 import { joinWaitlist } from '@/services/supabase';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 
 type AuthMode = 'signin' | 'signup' | 'waitlist';
 
 export default function Auth() {
+  const colors = useColors();
   const { signIn, signUp, signInWithApple, isAppleAuthAvailable, loading: authLoading } = useAuth();
 
   const [mode, setMode] = useState<AuthMode>('signin');
@@ -112,7 +114,7 @@ export default function Auth() {
     return (
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -129,7 +131,7 @@ export default function Auth() {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={defaultColors.textMuted}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -160,7 +162,7 @@ export default function Auth() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -183,7 +185,7 @@ export default function Auth() {
             <TextInput
               style={[styles.input, styles.inviteInput]}
               placeholder="INVITE CODE"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={defaultColors.textMuted}
               value={inviteCode}
               onChangeText={(text) => setInviteCode(text.toUpperCase())}
               autoCapitalize="characters"
@@ -219,7 +221,7 @@ export default function Auth() {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={defaultColors.textMuted}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -228,7 +230,7 @@ export default function Auth() {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={defaultColors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -284,7 +286,7 @@ export default function Auth() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -293,14 +295,14 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   title: {
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.xxl,
     fontWeight: typography.bold,
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.md,
     textAlign: 'center',
     marginBottom: spacing.xl,
@@ -324,17 +326,17 @@ const styles = StyleSheet.create({
     marginVertical: spacing.md,
   },
   emailToggleText: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.sm,
   },
   form: {
     width: '100%',
   },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.md,
     marginBottom: spacing.md,
   },
@@ -342,18 +344,18 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   error: {
-    color: colors.error,
+    color: defaultColors.error,
     fontSize: typography.sm,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
   linkText: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.sm,
     marginTop: spacing.lg,
   },
   link: {
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
     fontWeight: typography.medium,
   },
 });

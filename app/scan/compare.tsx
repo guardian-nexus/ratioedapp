@@ -18,8 +18,9 @@ import Logo from '@/components/Logo';
 import GradientButton from '@/components/GradientButton';
 import CreditBadge from '@/components/CreditBadge';
 import { useCredits } from '@/hooks/useCredits';
+import { useColors } from '@/hooks/useColors';
 import { track, Events } from '@/services/analytics';
-import { colors, spacing, typography, borderRadius } from '@/theme';
+import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 
 const MAX_IMAGES = 8;
 
@@ -30,6 +31,7 @@ interface PersonData {
 
 export default function Compare() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { credits, isSubscribed, canCompare, canScan } = useCredits();
 
   // Check if coming from results screen with existing scan
@@ -139,11 +141,11 @@ export default function Compare() {
 
   // Locked section for pre-filled Person A (when coming from results)
   const renderLockedPersonSection = () => (
-    <View style={[styles.personSection, styles.lockedSection]}>
+    <View style={[styles.personSection, styles.lockedSection, { backgroundColor: colors.surface }]}>
       <View style={styles.personHeader}>
-        <Text style={styles.personTitle}>Person A</Text>
+        <Text style={[styles.personTitle, { color: colors.text }]}>Person A</Text>
         <View style={styles.lockedLabelContainer}>
-          <Text style={styles.lockedLabel}>{personA.label || 'Person A'}</Text>
+          <Text style={[styles.lockedLabel, { color: colors.text }]}>{personA.label || 'Person A'}</Text>
           <Ionicons name="lock-closed" size={14} color={colors.textMuted} />
         </View>
       </View>
@@ -152,8 +154,8 @@ export default function Compare() {
         <View style={styles.lockedIconContainer}>
           <Ionicons name="checkmark-circle" size={32} color={colors.success} />
         </View>
-        <Text style={styles.lockedText}>Already scanned</Text>
-        <Text style={styles.lockedSubtext}>Results from your previous scan will be used</Text>
+        <Text style={[styles.lockedText, { color: colors.text }]}>Already scanned</Text>
+        <Text style={[styles.lockedSubtext, { color: colors.textSecondary }]}>Results from your previous scan will be used</Text>
       </View>
     </View>
   );
@@ -163,11 +165,11 @@ export default function Compare() {
     data: PersonData,
     setData: React.Dispatch<React.SetStateAction<PersonData>>
   ) => (
-    <View style={styles.personSection}>
+    <View style={[styles.personSection, { backgroundColor: colors.surface }]}>
       <View style={styles.personHeader}>
-        <Text style={styles.personTitle}>Person {person}</Text>
+        <Text style={[styles.personTitle, { color: colors.text }]}>Person {person}</Text>
         <TextInput
-          style={styles.personLabel}
+          style={[styles.personLabel, { backgroundColor: colors.background, color: colors.text }]}
           placeholder={`e.g., ${person === 'A' ? 'Jake' : 'Mike'}`}
           placeholderTextColor={colors.textMuted}
           value={data.label}
@@ -194,7 +196,7 @@ export default function Compare() {
                   </View>
                 </>
               ) : (
-                <View style={styles.placeholder}>
+                <View style={[styles.placeholder, { backgroundColor: colors.background, borderColor: colors.border }]}>
                   <Ionicons name="add" size={20} color={colors.textMuted} />
                 </View>
               )}
@@ -202,12 +204,12 @@ export default function Compare() {
           );
         })}
       </View>
-      <Text style={styles.gridHint}>Add 1-8 screenshots</Text>
+      <Text style={[styles.gridHint, { color: colors.textMuted }]}>Add 1-8 screenshots</Text>
     </View>
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -215,7 +217,7 @@ export default function Compare() {
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Logo size={24} />
-          <Text style={styles.headerTitle}>Compare</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Compare</Text>
         </View>
         <CreditBadge credits={credits} isSubscribed={isSubscribed} />
       </View>
@@ -225,7 +227,7 @@ export default function Compare() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.description}>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>
           {hasExistingScan
             ? 'Add screenshots from another conversation to compare'
             : 'Upload screenshots from two different conversations to see who\'s putting in more effort'}
@@ -234,20 +236,20 @@ export default function Compare() {
         {hasExistingScan ? renderLockedPersonSection() : renderPersonSection('A', personA, setPersonA)}
 
         <View style={styles.vsContainer}>
-          <View style={styles.vsLine} />
-          <Text style={styles.vsText}>VS</Text>
-          <View style={styles.vsLine} />
+          <View style={[styles.vsLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.vsText, { color: colors.textSecondary }]}>VS</Text>
+          <View style={[styles.vsLine, { backgroundColor: colors.border }]} />
         </View>
 
         {renderPersonSection('B', personB, setPersonB)}
 
-        <Text style={styles.creditNotice}>
+        <Text style={[styles.creditNotice, { color: colors.textMuted }]}>
           Uses {hasExistingScan ? '1 scan credit' : '2 scan credits'}
         </Text>
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={[styles.bottomCta, { paddingBottom: insets.bottom + spacing.md }]}>
+      <View style={[styles.bottomCta, { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <GradientButton
           title="Compare"
           icon="git-compare"
@@ -264,7 +266,7 @@ export default function Compare() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -281,7 +283,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.lg,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   scrollView: {
     flex: 1,
@@ -291,19 +293,19 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: typography.md,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.xl,
     lineHeight: 22,
   },
   personSection: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
   },
   lockedSection: {
     borderWidth: 1,
-    borderColor: colors.success + '40',
+    borderColor: defaultColors.success + '40',
   },
   lockedLabelContainer: {
     flex: 1,
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   lockedLabel: {
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.sm,
   },
   lockedContent: {
@@ -326,12 +328,12 @@ const styles = StyleSheet.create({
   lockedText: {
     fontSize: typography.md,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
     marginBottom: spacing.xs,
   },
   lockedSubtext: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     textAlign: 'center',
   },
   personHeader: {
@@ -343,15 +345,15 @@ const styles = StyleSheet.create({
   personTitle: {
     fontSize: typography.md,
     fontWeight: typography.semibold,
-    color: colors.text,
+    color: defaultColors.text,
   },
   personLabel: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.sm,
   },
   imageGrid: {
@@ -372,11 +374,11 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: defaultColors.border,
     borderStyle: 'dashed',
     borderRadius: borderRadius.sm,
   },
@@ -393,7 +395,7 @@ const styles = StyleSheet.create({
   },
   gridHint: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     textAlign: 'center',
     marginTop: spacing.sm,
   },
@@ -405,24 +407,24 @@ const styles = StyleSheet.create({
   vsLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: defaultColors.border,
   },
   vsText: {
     marginHorizontal: spacing.md,
     fontSize: typography.md,
     fontWeight: typography.bold,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
   },
   creditNotice: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     textAlign: 'center',
     marginTop: spacing.lg,
   },
   bottomCta: {
     padding: spacing.lg,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: defaultColors.border,
   },
 });

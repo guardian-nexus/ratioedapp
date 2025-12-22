@@ -1,4 +1,5 @@
-export const colors = {
+// Dark theme colors (default)
+export const darkColors = {
   // Base
   background: '#0a0a0a',
   surface: '#1a1a1a',
@@ -32,6 +33,50 @@ export const colors = {
   warning: '#eab308',
   error: '#ef4444',
 };
+
+// Light theme colors
+export const lightColors = {
+  // Base
+  background: '#ffffff',
+  surface: '#f5f5f5',
+  surfaceLight: '#eeeeee',
+
+  // Text
+  text: '#0a0a0a',
+  textSecondary: '#666666',
+  textMuted: '#999999',
+
+  // Brand gradient (pink to orange) - same as dark
+  gradientStart: '#ec4899',
+  gradientEnd: '#f97316',
+
+  // Score colors - same as dark
+  scoreGreen: '#22c55e',
+  scoreYellow: '#eab308',
+  scoreRed: '#ef4444',
+
+  // Score backgrounds (lighter versions for light mode)
+  scoreGreenBg: '#dcfce7',
+  scoreYellowBg: '#fef3c7',
+  scoreRedBg: '#fee2e2',
+
+  // UI
+  border: '#e5e5e5',
+  borderLight: '#d4d4d4',
+
+  // Status
+  success: '#22c55e',
+  warning: '#eab308',
+  error: '#ef4444',
+};
+
+// Default export for backward compatibility (dark mode)
+export const colors = darkColors;
+
+// Function to get colors based on theme
+export function getColors(isDark: boolean) {
+  return isDark ? darkColors : lightColors;
+}
 
 export const spacing = {
   xs: 4,

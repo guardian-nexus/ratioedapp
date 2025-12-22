@@ -23,12 +23,14 @@ import GradientButton from '@/components/GradientButton';
 import GradientText from '@/components/GradientText';
 import CompareShareCard from '@/components/CompareShareCard';
 import { getScan } from '@/services/supabase';
+import { useColors } from '@/hooks/useColors';
 import { track, Events } from '@/services/analytics';
-import { getScoreColor, getScoreLabel, colors, spacing, typography, borderRadius } from '@/theme';
+import { getScoreColor, getScoreLabel, colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 import { AnalysisResult } from '@/types';
 
 export default function CompareResults() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const params = useLocalSearchParams<{
     scanIdA: string;
     scanIdB: string;
@@ -177,7 +179,7 @@ export default function CompareResults() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.gradientStart} />
+        <ActivityIndicator size="large" color={defaultColors.gradientStart} />
       </View>
     );
   }
@@ -198,7 +200,7 @@ export default function CompareResults() {
   const labelB = params.labelB || 'Person B';
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -206,7 +208,7 @@ export default function CompareResults() {
             <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
           <Logo size={24} />
-          <Text style={styles.headerTitle}>Compare</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Compare</Text>
         </View>
       </View>
 
@@ -225,17 +227,17 @@ export default function CompareResults() {
         {/* Score Comparison */}
         <View style={styles.scoresContainer}>
           {/* Person A */}
-          <View style={[styles.scoreCard, winner === 'A' && styles.winnerCard]}>
+          <View style={[styles.scoreCard, { backgroundColor: colors.surface }, winner === 'A' && styles.winnerCard]}>
             {winner === 'A' && (
               <View style={styles.winnerBadge}>
-                <Ionicons name="trophy" size={12} color={colors.background} />
+                <Ionicons name="trophy" size={12} color={defaultColors.background} />
               </View>
             )}
-            <Text style={styles.personLabel}>{labelA}</Text>
+            <Text style={[styles.personLabel, { color: colors.textSecondary }]}>{labelA}</Text>
             <Text style={[styles.scoreNumber, { color: getScoreColor(resultA.score) }]}>
               {resultA.score}
             </Text>
-            <Text style={styles.scoreOutOf}>out of 100</Text>
+            <Text style={[styles.scoreOutOf, { color: colors.textMuted }]}>out of 100</Text>
             <View style={[styles.labelBadge, { backgroundColor: getScoreColor(resultA.score) + '20' }]}>
               <Text style={[styles.labelBadgeText, { color: getScoreColor(resultA.score) }]}>
                 {getScoreLabel(resultA.score)}
@@ -245,21 +247,21 @@ export default function CompareResults() {
 
           {/* VS */}
           <View style={styles.vsContainer}>
-            <Text style={styles.vsText}>VS</Text>
+            <Text style={[styles.vsText, { color: colors.textMuted }]}>VS</Text>
           </View>
 
           {/* Person B */}
-          <View style={[styles.scoreCard, winner === 'B' && styles.winnerCard]}>
+          <View style={[styles.scoreCard, { backgroundColor: colors.surface }, winner === 'B' && styles.winnerCard]}>
             {winner === 'B' && (
               <View style={styles.winnerBadge}>
-                <Ionicons name="trophy" size={12} color={colors.background} />
+                <Ionicons name="trophy" size={12} color={defaultColors.background} />
               </View>
             )}
-            <Text style={styles.personLabel}>{labelB}</Text>
+            <Text style={[styles.personLabel, { color: colors.textSecondary }]}>{labelB}</Text>
             <Text style={[styles.scoreNumber, { color: getScoreColor(resultB.score) }]}>
               {resultB.score}
             </Text>
-            <Text style={styles.scoreOutOf}>out of 100</Text>
+            <Text style={[styles.scoreOutOf, { color: colors.textMuted }]}>out of 100</Text>
             <View style={[styles.labelBadge, { backgroundColor: getScoreColor(resultB.score) + '20' }]}>
               <Text style={[styles.labelBadgeText, { color: getScoreColor(resultB.score) }]}>
                 {getScoreLabel(resultB.score)}
@@ -270,7 +272,7 @@ export default function CompareResults() {
 
         {/* Breakdown Comparison */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>BREAKDOWN</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>BREAKDOWN</Text>
 
           <ComparisonRow
             label="Messages Sent"
@@ -309,20 +311,20 @@ export default function CompareResults() {
             onPress={() => router.push(`/scan/results/${params.scanIdA}`)}
           >
             <Text style={styles.linkButtonText}>View {labelA}'s full results</Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.gradientStart} />
+            <Ionicons name="arrow-forward" size={16} color={defaultColors.gradientStart} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkButton}
             onPress={() => router.push(`/scan/results/${params.scanIdB}`)}
           >
             <Text style={styles.linkButtonText}>View {labelB}'s full results</Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.gradientStart} />
+            <Ionicons name="arrow-forward" size={16} color={defaultColors.gradientStart} />
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={[styles.bottomCta, { paddingBottom: insets.bottom + spacing.md }]}>
+      <View style={[styles.bottomCta, { paddingBottom: insets.bottom + spacing.md, borderTopColor: colors.border }]}>
         <GradientButton
           title="Share"
           icon="share-social"
@@ -332,10 +334,10 @@ export default function CompareResults() {
           style={styles.shareButton}
         />
         <TouchableOpacity
-          style={styles.doneButton}
+          style={[styles.doneButton, { backgroundColor: colors.surface }]}
           onPress={() => router.replace('/(tabs)')}
         >
-          <Text style={styles.doneButtonText}>Done</Text>
+          <Text style={[styles.doneButtonText, { color: colors.text }]}>Done</Text>
         </TouchableOpacity>
       </View>
 
@@ -376,28 +378,29 @@ function ComparisonRow({
   labelA: string;
   labelB: string;
 }) {
+  const colors = useColors();
   const total = valueA + valueB;
   const percentA = total > 0 ? Math.round((valueA / total) * 100) : 50;
 
   return (
-    <View style={styles.comparisonRow}>
-      <Text style={styles.comparisonLabel}>{label}</Text>
+    <View style={[styles.comparisonRow, { backgroundColor: colors.surface }]}>
+      <Text style={[styles.comparisonLabel, { color: colors.textSecondary }]}>{label}</Text>
       <View style={styles.comparisonValues}>
         <View style={styles.comparisonValue}>
-          <Text style={styles.comparisonValueText}>{valueA}</Text>
-          <Text style={styles.comparisonValueLabel}>{labelA}</Text>
+          <Text style={[styles.comparisonValueText, { color: colors.text }]}>{valueA}</Text>
+          <Text style={[styles.comparisonValueLabel, { color: colors.textMuted }]}>{labelA}</Text>
         </View>
-        <View style={styles.comparisonBar}>
+        <View style={[styles.comparisonBar, { backgroundColor: colors.border }]}>
           <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
+            colors={[defaultColors.gradientStart, defaultColors.gradientEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[styles.comparisonBarFill, { width: `${percentA}%` }]}
           />
         </View>
         <View style={styles.comparisonValue}>
-          <Text style={styles.comparisonValueText}>{valueB}</Text>
-          <Text style={styles.comparisonValueLabel}>{labelB}</Text>
+          <Text style={[styles.comparisonValueText, { color: colors.text }]}>{valueB}</Text>
+          <Text style={[styles.comparisonValueLabel, { color: colors.textMuted }]}>{labelB}</Text>
         </View>
       </View>
     </View>
@@ -407,18 +410,18 @@ function ComparisonRow({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   errorText: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.md,
   },
   linkText: {
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
     fontSize: typography.md,
     marginTop: spacing.md,
   },
@@ -437,7 +440,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.lg,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
   scrollView: {
     flex: 1,
@@ -461,7 +464,7 @@ const styles = StyleSheet.create({
   },
   scoreCard: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',
@@ -469,7 +472,7 @@ const styles = StyleSheet.create({
   },
   winnerCard: {
     borderWidth: 2,
-    borderColor: colors.gradientStart,
+    borderColor: defaultColors.gradientStart,
   },
   winnerBadge: {
     position: 'absolute',
@@ -478,13 +481,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.gradientStart,
+    backgroundColor: defaultColors.gradientStart,
     justifyContent: 'center',
     alignItems: 'center',
   },
   personLabel: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     marginBottom: spacing.sm,
   },
   scoreNumber: {
@@ -493,7 +496,7 @@ const styles = StyleSheet.create({
   },
   scoreOutOf: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   labelBadge: {
     paddingHorizontal: spacing.sm,
@@ -511,27 +514,27 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: typography.md,
     fontWeight: '700',
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
   },
   section: {
     marginBottom: spacing.xl,
   },
   sectionTitle: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     fontWeight: '600',
     letterSpacing: 1,
     marginBottom: spacing.md,
   },
   comparisonRow: {
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
   comparisonLabel: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
@@ -546,17 +549,17 @@ const styles = StyleSheet.create({
   comparisonValueText: {
     fontSize: typography.lg,
     fontWeight: '700',
-    color: colors.text,
+    color: defaultColors.text,
   },
   comparisonValueLabel: {
     fontSize: typography.xs,
-    color: colors.textMuted,
+    color: defaultColors.textMuted,
     marginTop: 2,
   },
   comparisonBar: {
     flex: 1,
     height: 8,
-    backgroundColor: colors.border,
+    backgroundColor: defaultColors.border,
     borderRadius: 4,
     marginHorizontal: spacing.sm,
     overflow: 'hidden',
@@ -577,12 +580,12 @@ const styles = StyleSheet.create({
   },
   linkButtonText: {
     fontSize: typography.sm,
-    color: colors.gradientStart,
+    color: defaultColors.gradientStart,
   },
   bottomCta: {
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: defaultColors.border,
     flexDirection: 'row',
     gap: spacing.md,
   },
@@ -591,7 +594,7 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
@@ -600,7 +603,7 @@ const styles = StyleSheet.create({
   doneButtonText: {
     fontSize: typography.md,
     fontWeight: '600',
-    color: colors.text,
+    color: defaultColors.text,
   },
   hiddenCard: {
     position: 'absolute',

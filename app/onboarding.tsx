@@ -13,7 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Logo from '@/components/Logo';
 import GradientButton from '@/components/GradientButton';
-import { colors, spacing, typography } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import { colors as defaultColors, spacing, typography } from '@/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -31,22 +32,28 @@ const slides: Slide[] = [
     id: '1',
     icon: 'camera',
     title: 'Upload your texts',
-    subtitle: 'Screenshot your conversations from any messaging app',
+    subtitle: 'Screenshot your conversations or upload a chat export file',
   },
   {
     id: '2',
+    icon: 'chatbubbles',
+    title: 'Analyze any chat',
+    subtitle: '1-on-1 convos with screenshots or text exports. Group chats with text exports.',
+  },
+  {
+    id: '3',
     icon: 'analytics',
     title: 'Get the receipts',
     subtitle: 'See exactly who sends more messages, words, and questions',
   },
   {
-    id: '3',
+    id: '4',
     icon: 'scale',
     title: 'See the balance',
     subtitle: 'Find out if they\'re matching your energy or if you\'re carrying',
   },
   {
-    id: '4',
+    id: '5',
     icon: 'share-social',
     title: 'Share the results',
     subtitle: 'Show your friends what you\'re dealing with',
@@ -54,6 +61,7 @@ const slides: Slide[] = [
 ];
 
 export default function Onboarding() {
+  const colors = useColors();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -99,7 +107,7 @@ export default function Onboarding() {
   const isLastSlide = currentIndex === slides.length - 1;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <Logo size={40} showText />
@@ -142,7 +150,7 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: defaultColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -153,7 +161,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   skipText: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.md,
   },
   slide: {
@@ -166,20 +174,20 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: colors.surface,
+    backgroundColor: defaultColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
   title: {
-    color: colors.text,
+    color: defaultColors.text,
     fontSize: typography.xxl,
     fontWeight: typography.bold,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
   subtitle: {
-    color: colors.textSecondary,
+    color: defaultColors.textSecondary,
     fontSize: typography.lg,
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
@@ -197,11 +205,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
+    backgroundColor: defaultColors.border,
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: colors.gradientStart,
+    backgroundColor: defaultColors.gradientStart,
     width: 24,
   },
   button: {

@@ -62,49 +62,115 @@ interface InterpretationResult {
 }
 
 // ============================================================================
+// RETRY LOGIC WITH EXPONENTIAL BACKOFF
+// ============================================================================
+
+interface RetryOptions {
+  maxRetries?: number;
+  baseDelayMs?: number;
+  maxDelayMs?: number;
+  retryableErrors?: string[];
+}
+
+const DEFAULT_RETRY_OPTIONS: RetryOptions = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 10000,
+  retryableErrors: ['RATE_LIMITED', 'API_UNAVAILABLE', 'MAINTENANCE'],
+};
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: RetryOptions = {}
+): Promise<T> {
+  const opts = { ...DEFAULT_RETRY_OPTIONS, ...options };
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= opts.maxRetries!; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Check if this error is retryable
+      const isRetryable = opts.retryableErrors!.some(
+        e => lastError!.message.includes(e)
+      );
+
+      // Don't retry non-retryable errors or if we've exhausted retries
+      if (!isRetryable || attempt >= opts.maxRetries!) {
+        throw lastError;
+      }
+
+      // Calculate delay with exponential backoff + jitter
+      const exponentialDelay = opts.baseDelayMs! * Math.pow(2, attempt);
+      const jitter = Math.random() * 500;
+      const delay = Math.min(exponentialDelay + jitter, opts.maxDelayMs!);
+
+      if (__DEV__) {
+        console.log(`Retry attempt ${attempt + 1}/${opts.maxRetries} after ${delay}ms`);
+      }
+
+      await sleep(delay);
+    }
+  }
+
+  throw lastError || new Error('Retry failed');
+}
+
+// ============================================================================
 // EDGE FUNCTION CALLS
 // ============================================================================
 
 async function callAnalyzeScan(images: ImageContent[]): Promise<OCRResult> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Not authenticated');
+  return withRetry(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
 
-  const response = await fetch(
-    `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/analyze-scan`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ images }),
-    }
-  );
+    const response = await fetch(
+      `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/analyze-scan`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ images }),
+      }
+    );
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    // Handle specific error codes
-    if (data.code === 'NO_TOKENS') {
-      throw new Error('NO_TOKENS');
+    if (!response.ok) {
+      // Handle specific error codes
+      if (data.code === 'NO_TOKENS') {
+        throw new Error('NO_TOKENS');
+      }
+      if (data.code === 'RATE_LIMITED') {
+        throw new Error('RATE_LIMITED');
+      }
+      if (data.code === 'API_UNAVAILABLE' || data.code === 'MAINTENANCE') {
+        throw new Error('MAINTENANCE');
+      }
+      if (data.code === 'API_CREDITS_EXHAUSTED') {
+        throw new Error('API_CREDITS_EXHAUSTED');
+      }
+      // Handle HTTP status codes for API issues
+      if (response.status === 529 || response.status === 503 || response.status === 502) {
+        throw new Error('API_UNAVAILABLE');
+      }
+      throw new Error(data.error || 'Analysis failed');
     }
-    if (data.code === 'RATE_LIMITED') {
-      throw new Error('RATE_LIMITED');
-    }
-    if (data.code === 'API_UNAVAILABLE' || data.code === 'MAINTENANCE') {
-      throw new Error('MAINTENANCE');
-    }
-    if (data.code === 'API_CREDITS_EXHAUSTED') {
-      throw new Error('API_CREDITS_EXHAUSTED');
-    }
-    // Handle HTTP status codes for API issues
-    if (response.status === 529 || response.status === 503 || response.status === 502) {
-      throw new Error('API_UNAVAILABLE');
-    }
-    throw new Error(data.error || 'Analysis failed');
-  }
 
-  return data as OCRResult;
+    return data as OCRResult;
+  }, {
+    // Don't retry NO_TOKENS or API_CREDITS_EXHAUSTED - those are permanent failures
+    retryableErrors: ['RATE_LIMITED', 'API_UNAVAILABLE', 'MAINTENANCE'],
+  });
 }
 
 async function callInterpretPatterns(
@@ -562,7 +628,7 @@ function calculateScore(stats: Stats): number {
 function getScoreLabel(score: number): string {
   if (score >= 60) return 'BALANCED';
   if (score >= 40) return 'MIXED';
-  return 'ONE-SIDED AF';
+  return 'ONE-SIDED';
 }
 
 // ============================================================================

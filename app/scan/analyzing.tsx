@@ -319,16 +319,13 @@ export default function Analyzing() {
     // Track start
     trackScanStarted(imagesA.length + imagesB.length, false);
 
-    // Step 1: Extracting messages from both
+    // Step 1: Analyzing first conversation
     setCurrentStep(0);
-    await new Promise((r) => setTimeout(r, 500));
+    const resultA = await analyzeConversation(imagesA, false);
 
-    // Step 2: Analyzing both conversations
+    // Step 2: Analyzing second conversation (sequential to avoid rate limits)
     setCurrentStep(1);
-    const [resultA, resultB] = await Promise.all([
-      analyzeConversation(imagesA, false),
-      analyzeConversation(imagesB, false),
-    ]);
+    const resultB = await analyzeConversation(imagesB, false);
 
     // Step 3: Saving both scans with shared compare_id
     setCurrentStep(2);
@@ -428,14 +425,15 @@ export default function Analyzing() {
           ) : isActive ? (
             <Ionicons name="arrow-forward-circle" size={22} color={defaultColors.gradientStart} />
           ) : (
-            <Ionicons name="ellipse-outline" size={22} color={defaultColors.textMuted} />
+            <Ionicons name="ellipse-outline" size={22} color={colors.textMuted} />
           )}
         </View>
         <Text
           style={[
             styles.stepText,
+            { color: colors.textMuted },
             isCompleted && styles.stepCompleted,
-            isActive && styles.stepActive,
+            isActive && { color: colors.text, fontWeight: typography.medium },
           ]}
         >
           {step}
@@ -470,14 +468,14 @@ export default function Analyzing() {
         </View>
 
         {/* Wait Time Notice */}
-        <Text style={styles.waitNotice}>
+        <Text style={[styles.waitNotice, { color: colors.textSecondary }]}>
           {getWaitMessage()}
         </Text>
 
         {/* Tips */}
-        <View style={styles.tipContainer}>
+        <View style={[styles.tipContainer, { backgroundColor: colors.surface }]}>
           <Text style={styles.tipLabel}>Tip:</Text>
-          <Text style={styles.tipText}>{TIPS[currentTip]}</Text>
+          <Text style={[styles.tipText, { color: colors.text }]}>{TIPS[currentTip]}</Text>
         </View>
       </View>
     </View>

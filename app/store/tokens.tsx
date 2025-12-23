@@ -107,13 +107,20 @@ export default function Tokens() {
             : `${tokens} scans have been added to your account!`,
           [{ text: 'Awesome', onPress: () => router.back() }]
         );
+      } else {
+        // Purchase returned false - likely package not found or not initialized
+        Alert.alert(
+          'Purchase Unavailable',
+          'Unable to load purchase options. Please try again later or contact support.'
+        );
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       track(Events.PURCHASE_FAILED, {
         product_id: productId,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       });
-      Alert.alert('Purchase Failed', 'Something went wrong. Please try again.');
+      Alert.alert('Purchase Failed', `Error: ${errorMessage}`);
     } finally {
       setLoading(false);
       setSelectedProduct(null);
@@ -137,6 +144,30 @@ export default function Tokens() {
       Alert.alert('Restore Failed', 'Failed to restore purchases. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Debug function to check RevenueCat status
+  const handleDebugCheck = async () => {
+    try {
+      const products = await getProducts();
+      if (products.length === 0) {
+        Alert.alert(
+          'Debug: No Products',
+          'RevenueCat returned 0 products. Check:\n\n1. Offering is set as Current\n2. Products are in the offering\n3. App Store Connect API key is configured'
+        );
+      } else {
+        const productList = products.map(p => `${p.identifier}: ${p.product.priceString}`).join('\n');
+        Alert.alert(
+          'Debug: Products Found',
+          `Found ${products.length} products:\n\n${productList}`
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Debug: Error',
+        `Failed to fetch products: ${error instanceof Error ? error.message : 'Unknown'}`
+      );
     }
   };
 
@@ -288,6 +319,15 @@ export default function Tokens() {
           >
             <Ionicons name="gift" size={16} color={colors.textSecondary} />
             <Text style={styles.linkText}>Have a promo code?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={handleDebugCheck}
+            disabled={loading}
+          >
+            <Ionicons name="bug" size={16} color={colors.textSecondary} />
+            <Text style={styles.linkText}>Debug: Check Products</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -120,10 +120,10 @@ export function getScoreColor(score: number): string {
 }
 
 // Helper function to get score label
-export function getScoreLabel(score: number): 'BALANCED' | 'MIXED' | 'ONE-SIDED AF' {
+export function getScoreLabel(score: number): 'BALANCED' | 'MIXED' | 'ONE-SIDED' {
   if (score >= 60) return 'BALANCED';
   if (score >= 40) return 'MIXED';
-  return 'ONE-SIDED AF';
+  return 'ONE-SIDED';
 }
 
 export const theme = {

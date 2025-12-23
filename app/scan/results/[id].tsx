@@ -702,12 +702,12 @@ const styles = StyleSheet.create({
   },
   scoreGlow: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
   scoreNumber: {
-    fontSize: 96,
+    fontSize: 80,
     fontWeight: typography.bold,
   },
   scoreOutOf: {

@@ -323,6 +323,9 @@ export default function Analyzing() {
     setCurrentStep(0);
     const resultA = await analyzeConversation(imagesA, false);
 
+    // Brief delay between API calls to avoid rate limits
+    await new Promise((r) => setTimeout(r, 2000));
+
     // Step 2: Analyzing second conversation (sequential to avoid rate limits)
     setCurrentStep(1);
     const resultB = await analyzeConversation(imagesB, false);

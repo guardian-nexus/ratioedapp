@@ -702,18 +702,18 @@ const styles = StyleSheet.create({
   },
   scoreGlow: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   scoreNumber: {
-    fontSize: 80,
+    fontSize: 64,
     fontWeight: typography.bold,
   },
   scoreOutOf: {
     fontSize: typography.md,
     color: defaultColors.textSecondary,
-    marginTop: -spacing.sm,
+    marginTop: spacing.sm,
   },
   labelBadge: {
     paddingHorizontal: spacing.md,

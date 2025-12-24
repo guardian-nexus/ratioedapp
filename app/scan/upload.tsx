@@ -33,12 +33,12 @@ export default function Upload() {
   const insets = useSafeAreaInsets();
   const { credits, isSubscribed, canScan } = useCredits();
   const colors = useColors();
-  const params = useLocalSearchParams<{ sharedImages?: string }>();
+  const params = useLocalSearchParams<{ sharedImages?: string; prefillLabel?: string }>();
 
   const [conversationType, setConversationType] = useState<ConversationType>('oneOnOne');
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>('screenshots');
   const [images, setImages] = useState<string[]>([]);
-  const [label, setLabel] = useState('');
+  const [label, setLabel] = useState(params.prefillLabel || '');
   const [roastMode, setRoastMode] = useState(false);
   const [chatExportFile, setChatExportFile] = useState<{ name: string; uri: string } | null>(null);
 

@@ -11,6 +11,7 @@ import {
   Alert,
   Animated,
   Easing,
+  Modal,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,8 +25,9 @@ import { useColors } from '@/hooks/useColors';
 import { track, Events } from '@/services/analytics';
 import { getScoreColor, getScoreLabel, colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 import { AnalysisResult, Pattern, ConversationVibe } from '@/types';
-import { success as hapticSuccess } from '@/utils/haptics';
+import { success as hapticSuccess, tapLight } from '@/utils/haptics';
 import { trackScanAndMaybePromptReview } from '@/utils/storeReview';
+import { getPatternExplanation } from '@/utils/patternExplainers';
 
 export default function Results() {
   const insets = useSafeAreaInsets();
@@ -348,34 +350,53 @@ export default function Results() {
           </View>
         </View>
 
-        {/* Compare CTA */}
-        <TouchableOpacity
-          style={styles.compareCta}
-          onPress={() => {
-            Alert.alert(
-              'Compare Conversations',
-              'This will use 1 scan credit',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Continue',
-                  onPress: () => {
-                    router.push({
-                      pathname: '/scan/compare',
-                      params: {
-                        existingScanId: id,
-                        existingLabel: result?.chatLabel || result?.label || 'Person A',
-                      },
-                    });
-                  },
+        {/* Action CTAs */}
+        <View style={styles.ctaContainer}>
+          {/* Re-scan CTA */}
+          <TouchableOpacity
+            style={styles.ctaButton}
+            onPress={() => {
+              router.push({
+                pathname: '/scan/upload',
+                params: {
+                  prefillLabel: result?.chatLabel || '',
                 },
-              ]
-            );
-          }}
-        >
-          <Text style={styles.compareText}>Compare to another convo?</Text>
-          <Ionicons name="arrow-forward" size={16} color={defaultColors.gradientStart} />
-        </TouchableOpacity>
+              });
+            }}
+          >
+            <Ionicons name="refresh" size={16} color={defaultColors.gradientStart} />
+            <Text style={styles.ctaText}>Scan more of this convo</Text>
+          </TouchableOpacity>
+
+          {/* Compare CTA */}
+          <TouchableOpacity
+            style={styles.ctaButton}
+            onPress={() => {
+              Alert.alert(
+                'Compare Conversations',
+                'This will use 1 scan credit',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Continue',
+                    onPress: () => {
+                      router.push({
+                        pathname: '/scan/compare',
+                        params: {
+                          existingScanId: id,
+                          existingLabel: result?.chatLabel || result?.label || 'Person A',
+                        },
+                      });
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Ionicons name="git-compare" size={16} color={defaultColors.gradientStart} />
+            <Text style={styles.ctaText}>Compare to another convo</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Bottom Actions */}
@@ -396,25 +417,85 @@ export default function Results() {
 
 function PatternCard({ pattern }: { pattern: Pattern }) {
   const colors = useColors();
+  const [showModal, setShowModal] = useState(false);
+  const explanation = getPatternExplanation(pattern.title);
+
   const sentimentColors = {
     positive: defaultColors.scoreGreen,
     neutral: defaultColors.scoreYellow,
     negative: defaultColors.scoreRed,
   };
 
+  const handlePress = () => {
+    tapLight();
+    setShowModal(true);
+  };
+
   return (
-    <View style={[styles.patternCard, { backgroundColor: colors.surface }]}>
-      <View
-        style={[
-          styles.patternDot,
-          { backgroundColor: sentimentColors[pattern.sentiment] },
-        ]}
-      />
-      <View style={styles.patternContent}>
-        <Text style={[styles.patternTitle, { color: colors.text }]}>{pattern.title}</Text>
-        <Text style={[styles.patternDescription, { color: colors.textSecondary }]}>{pattern.description}</Text>
-      </View>
-    </View>
+    <>
+      <TouchableOpacity
+        style={[styles.patternCard, { backgroundColor: colors.surface }]}
+        onPress={handlePress}
+        activeOpacity={0.7}
+      >
+        <View
+          style={[
+            styles.patternDot,
+            { backgroundColor: sentimentColors[pattern.sentiment] },
+          ]}
+        />
+        <View style={styles.patternContent}>
+          <Text style={[styles.patternTitle, { color: colors.text }]}>{pattern.title}</Text>
+          <Text style={[styles.patternDescription, { color: colors.textSecondary }]}>{pattern.description}</Text>
+        </View>
+        <Ionicons name="help-circle-outline" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+
+      {/* Explanation Modal */}
+      <Modal
+        visible={showModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <View style={[styles.patternDot, { backgroundColor: sentimentColors[pattern.sentiment] }]} />
+              <Text style={[styles.modalTitle, { color: colors.text }]}>{explanation.title}</Text>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={[styles.modalSectionTitle, { color: colors.textMuted }]}>WHAT IT MEANS</Text>
+              <Text style={[styles.modalSectionText, { color: colors.textSecondary }]}>{explanation.whatItMeans}</Text>
+            </View>
+
+            <View style={styles.modalSection}>
+              <Text style={[styles.modalSectionTitle, { color: colors.textMuted }]}>WHY IT MATTERS</Text>
+              <Text style={[styles.modalSectionText, { color: colors.textSecondary }]}>{explanation.whyItMatters}</Text>
+            </View>
+
+            {explanation.tip && (
+              <View style={[styles.tipBox, { backgroundColor: colors.gradientStart + '15' }]}>
+                <Ionicons name="bulb" size={16} color={colors.gradientStart} />
+                <Text style={[styles.tipText, { color: colors.text }]}>{explanation.tip}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowModal(false)}
+            >
+              <Text style={[styles.modalCloseText, { color: colors.gradientStart }]}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -845,14 +926,18 @@ const styles = StyleSheet.create({
     backgroundColor: defaultColors.gradientStart,
     borderRadius: 2,
   },
-  compareCta: {
+  ctaContainer: {
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.md,
   },
-  compareText: {
+  ctaText: {
     fontSize: typography.sm,
     color: defaultColors.gradientStart,
   },
@@ -954,5 +1039,73 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+  },
+  // Pattern explainer modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: defaultColors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  modalTitle: {
+    fontSize: typography.lg,
+    fontWeight: typography.bold,
+    color: defaultColors.text,
+    flex: 1,
+  },
+  modalSection: {
+    marginBottom: spacing.md,
+  },
+  modalSectionTitle: {
+    fontSize: typography.xs,
+    fontWeight: typography.semibold,
+    color: defaultColors.textMuted,
+    letterSpacing: 1,
+    marginBottom: spacing.xs,
+  },
+  modalSectionText: {
+    fontSize: typography.sm,
+    color: defaultColors.textSecondary,
+    lineHeight: 22,
+  },
+  tipBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: defaultColors.gradientStart + '15',
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: typography.sm,
+    color: defaultColors.text,
+    lineHeight: 20,
+  },
+  modalCloseButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+  modalCloseText: {
+    fontSize: typography.md,
+    fontWeight: typography.semibold,
+    color: defaultColors.gradientStart,
   },
 });

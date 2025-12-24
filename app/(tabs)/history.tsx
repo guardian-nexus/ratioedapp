@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import Logo from '@/components/Logo';
+import { HistoryListSkeleton } from '@/components/SkeletonLoader';
 import { getScanHistory, deleteScan, deleteAllScans } from '@/services/supabase';
 import { useColors } from '@/hooks/useColors';
 import { getScoreColor, getScoreLabel, colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
@@ -314,26 +315,30 @@ export default function History() {
       </View>
 
       {/* History List */}
-      <FlatList
-        data={historyItems}
-        renderItem={renderHistoryItem}
-        keyExtractor={(item) =>
-          item.type === 'compare' ? item.compareId : item.scan.id
-        }
-        contentContainerStyle={[
-          styles.listContent,
-          historyItems.length === 0 && styles.emptyList,
-        ]}
-        ListEmptyComponent={renderEmpty}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.gradientStart}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <HistoryListSkeleton />
+      ) : (
+        <FlatList
+          data={historyItems}
+          renderItem={renderHistoryItem}
+          keyExtractor={(item) =>
+            item.type === 'compare' ? item.compareId : item.scan.id
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            historyItems.length === 0 && styles.emptyList,
+          ]}
+          ListEmptyComponent={renderEmpty}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.gradientStart}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }

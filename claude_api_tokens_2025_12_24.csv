@@ -1,0 +1,2 @@
+usage_date_utc,model_version,api_key,workspace,usage_type,context_window,usage_input_tokens_no_cache,usage_input_tokens_cache_write_5m,usage_input_tokens_cache_write_1h,usage_input_tokens_cache_read,usage_output_tokens,web_search_count
+2025-12-24 03:00,claude-haiku-4-5-20251001,ratioed_prod,Default,standard,≤ 200k,6537,0,0,0,2545,0

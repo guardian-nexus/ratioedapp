@@ -1,4 +1,5 @@
 import { File } from 'expo-file-system/next';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import { supabase } from '@/services/supabase';
 import { AnalysisResponse, Pattern, GroupChatResponse, GroupMemberAnalysis, GroupMemberTag } from '@/types';
@@ -636,28 +637,50 @@ function getScoreLabel(score: number): string {
 // MAIN ANALYSIS FUNCTION
 // ============================================================================
 
+// Compress image to reduce size for API calls
+// Target: max 1500px on longest side, JPEG at 80% quality
+async function compressImage(uri: string): Promise<{ uri: string; base64: string }> {
+  try {
+    // Resize to max 1500px and compress as JPEG
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 1500 } }], // Resize width, height scales proportionally
+      {
+        compress: 0.8, // 80% quality
+        format: ImageManipulator.SaveFormat.JPEG,
+        base64: true,
+      }
+    );
+
+    return {
+      uri: result.uri,
+      base64: result.base64 || '',
+    };
+  } catch (error) {
+    // Fallback: read original file if compression fails
+    if (__DEV__) {
+      console.warn('Image compression failed, using original:', error);
+    }
+    const file = new File(uri);
+    const base64 = await file.base64();
+    return { uri, base64 };
+  }
+}
+
 export async function analyzeConversation(
   imageUris: string[],
   _roastMode: boolean = false // Reserved for future use
 ): Promise<AnalysisResponse> {
-  // Convert images to base64
+  // Compress and convert images to base64
   const images: ImageContent[] = await Promise.all(
     imageUris.map(async (uri) => {
-      const file = new File(uri);
-      const base64 = await file.base64();
-
-      // Determine media type from URI
-      const extension = uri.split('.').pop()?.toLowerCase();
-      let mediaType = 'image/jpeg';
-      if (extension === 'png') mediaType = 'image/png';
-      else if (extension === 'gif') mediaType = 'image/gif';
-      else if (extension === 'webp') mediaType = 'image/webp';
+      const { base64 } = await compressImage(uri);
 
       return {
         type: 'image' as const,
         source: {
           type: 'base64' as const,
-          media_type: mediaType,
+          media_type: 'image/jpeg', // Always JPEG after compression
           data: base64,
         },
       };

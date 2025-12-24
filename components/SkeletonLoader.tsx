@@ -8,7 +8,7 @@ import { useColors } from '@/hooks/useColors';
 import { borderRadius, spacing } from '@/theme';
 
 interface SkeletonLoaderProps {
-  width?: number | string;
+  width?: number | `${number}%`;
   height?: number;
   borderRadius?: number;
   style?: ViewStyle;

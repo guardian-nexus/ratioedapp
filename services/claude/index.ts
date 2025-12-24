@@ -73,10 +73,10 @@ interface RetryOptions {
 }
 
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
-  maxRetries: 3,
-  baseDelayMs: 1000,
-  maxDelayMs: 10000,
-  retryableErrors: ['RATE_LIMITED', 'API_UNAVAILABLE', 'MAINTENANCE'],
+  maxRetries: 5,
+  baseDelayMs: 2000,
+  maxDelayMs: 30000,
+  retryableErrors: ['RATE_LIMITED', 'API_UNAVAILABLE', 'MAINTENANCE', 'overloaded', '529', '503'],
 };
 
 async function sleep(ms: number): Promise<void> {

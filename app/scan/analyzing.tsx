@@ -540,7 +540,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: spacing.lg,
     maxWidth: 300,
+    minHeight: 90,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   tipLabel: {
     fontSize: typography.sm,

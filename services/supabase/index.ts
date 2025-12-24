@@ -165,6 +165,16 @@ export async function updateScanLabel(id: string, label: string): Promise<void> 
   if (error) throw error;
 }
 
+// Update scan compare_id (to link scans together for comparison)
+export async function updateScanCompareId(id: string, compareId: string): Promise<void> {
+  const { error } = await supabase
+    .from('scans')
+    .update({ compare_id: compareId })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
 // Delete single scan
 export async function deleteScan(id: string): Promise<void> {
   const { error } = await supabase

@@ -161,6 +161,9 @@ async function callAnalyzeScan(images: ImageContent[]): Promise<OCRResult> {
       if (data.code === 'API_CREDITS_EXHAUSTED') {
         throw new Error('API_CREDITS_EXHAUSTED');
       }
+      if (data.code === 'IMAGE_ERROR') {
+        throw new Error('IMAGE_ERROR');
+      }
       // Handle HTTP status codes for API issues
       if (response.status === 529 || response.status === 503 || response.status === 502) {
         throw new Error('API_UNAVAILABLE');
@@ -638,23 +641,44 @@ function getScoreLabel(score: number): string {
 // ============================================================================
 
 // Compress image to reduce size for API calls
-// Target: max 1500px on longest side, JPEG at 80% quality
+// Target: max 2000px on any dimension, JPEG at 70% quality
+// For tall scroll captures, we limit height to prevent massive images
 async function compressImage(uri: string): Promise<{ uri: string; base64: string }> {
   try {
-    // Resize to max 1500px and compress as JPEG
-    const result = await ImageManipulator.manipulateAsync(
+    // First pass: resize to reasonable dimensions
+    // Limit both width AND height to handle tall scroll captures
+    const firstPass = await ImageManipulator.manipulateAsync(
       uri,
-      [{ resize: { width: 1500 } }], // Resize width, height scales proportionally
+      [{ resize: { width: 1200 } }], // Scale down width first
       {
-        compress: 0.8, // 80% quality
+        compress: 0.7, // 70% quality for smaller size
         format: ImageManipulator.SaveFormat.JPEG,
         base64: true,
       }
     );
 
+    // Check if the result is still too large (base64 > 1MB = ~750KB actual)
+    // Base64 is ~33% larger than binary, so 1.3MB base64 ≈ 1MB file
+    if (firstPass.base64 && firstPass.base64.length > 1300000) {
+      // Image still too large (probably very tall), compress more aggressively
+      const secondPass = await ImageManipulator.manipulateAsync(
+        firstPass.uri,
+        [{ resize: { width: 800 } }], // Even smaller
+        {
+          compress: 0.5, // 50% quality
+          format: ImageManipulator.SaveFormat.JPEG,
+          base64: true,
+        }
+      );
+      return {
+        uri: secondPass.uri,
+        base64: secondPass.base64 || '',
+      };
+    }
+
     return {
-      uri: result.uri,
-      base64: result.base64 || '',
+      uri: firstPass.uri,
+      base64: firstPass.base64 || '',
     };
   } catch (error) {
     // Fallback: read original file if compression fails
@@ -1313,6 +1337,9 @@ export function getErrorMessage(error: unknown): string {
     }
     if (error.message === 'API_CREDITS_EXHAUSTED') {
       return "We're experiencing technical difficulties. Please try again later.";
+    }
+    if (error.message === 'IMAGE_ERROR') {
+      return 'Screenshot too large. Try cropping or using smaller images.';
     }
     if (error.message.includes('Not authenticated')) {
       return 'Please sign in to analyze conversations.';

@@ -41,11 +41,9 @@ export default function ShareCard({ result }: ShareCardProps) {
 
       {/* Score Section */}
       <View style={styles.scoreSection}>
-        <View style={[styles.scoreGlow, { shadowColor: scoreColor }]}>
-          <Text style={[styles.scoreNumber, { color: scoreColor }]}>
-            {result.score}
-          </Text>
-        </View>
+        <Text style={[styles.scoreNumber, { color: scoreColor }]}>
+          {result.score}
+        </Text>
         <Text style={styles.scoreOutOf}>out of 100</Text>
         <View style={[styles.labelBadge, { backgroundColor: scoreColor + '20' }]}>
           <Text style={[styles.labelBadgeText, { color: scoreColor }]}>
@@ -123,11 +121,6 @@ const styles = StyleSheet.create({
   scoreSection: {
     alignItems: 'center',
     marginVertical: spacing.xl,
-  },
-  scoreGlow: {
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 30,
   },
   scoreNumber: {
     fontSize: 120,

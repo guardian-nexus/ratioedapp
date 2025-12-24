@@ -233,8 +233,11 @@ export default function Share() {
             quality: 1,
             result: 'tmpfile',
           }}
+          style={styles.viewShotContainer}
         >
-          <ShareCard result={result} />
+          <View style={styles.cardWrapper}>
+            <ShareCard result={result} />
+          </View>
         </ViewShot>
       </View>
 
@@ -311,6 +314,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
+  },
+  viewShotContainer: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  cardWrapper: {
+    backgroundColor: defaultColors.background,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   actionsContainer: {
     padding: spacing.lg,

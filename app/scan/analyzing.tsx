@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Logo from '@/components/Logo';
 import { analyzeConversation, analyzeTextContent, analyzeGroupChat, getErrorMessage, isMaintenanceError } from '@/services/claude';
-import { saveScan } from '@/services/supabase';
+import { saveScan, updateScanCompareId } from '@/services/supabase';
 import { useCredits } from '@/hooks/useCredits';
 import { useColors } from '@/hooks/useColors';
 import { track, Events, trackScanStarted, trackScanCompleted, trackError } from '@/services/analytics';
@@ -397,10 +397,12 @@ export default function Analyzing() {
     // Step 3: Saving Person B scan with compare_id linking to existing scan
     setCurrentStep(2);
     const compareId = `compare_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const savedB = await saveScan(resultB, labelB, imagesB.length, compareId);
 
-    // Update existing scan with the same compare_id (optional - links them together)
-    // Note: This could be done server-side if needed
+    // Save Person B and update Person A with the same compare_id to link them
+    const [savedB] = await Promise.all([
+      saveScan(resultB, labelB, imagesB.length, compareId),
+      updateScanCompareId(existingScanId, compareId),
+    ]);
 
     // Track completion
     track(Events.SCAN_COMPLETED, {

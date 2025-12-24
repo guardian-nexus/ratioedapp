@@ -189,13 +189,14 @@ export default function Analyzing() {
         return;
       }
 
-      // Handle maintenance/API errors with a friendlier message
+      // Handle maintenance/API errors with a friendlier message + retry option
       if (isMaintenanceError(error)) {
         Alert.alert(
-          'Service Temporarily Unavailable',
-          message,
+          'High Demand',
+          "We're experiencing high traffic. Want to try again?",
           [
-            { text: 'Go Back', onPress: () => router.back() },
+            { text: 'Go Back', style: 'cancel', onPress: () => router.back() },
+            { text: 'Try Again', onPress: () => runAnalysis() },
           ]
         );
         return;
@@ -329,8 +330,8 @@ export default function Analyzing() {
     setCurrentStep(0);
     const resultA = await analyzeConversation(imagesA, false);
 
-    // Brief delay between API calls to avoid rate limits
-    await new Promise((r) => setTimeout(r, 2000));
+    // Longer delay between API calls to avoid rate limits
+    await new Promise((r) => setTimeout(r, 5000));
 
     // Step 2: Analyzing second conversation (sequential to avoid rate limits)
     setCurrentStep(1);

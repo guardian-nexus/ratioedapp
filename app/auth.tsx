@@ -122,16 +122,16 @@ export default function Auth() {
         >
           <Logo size={80} showText />
 
-          <Text style={styles.title}>Join the Waitlist</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Join the Waitlist</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             We're launching invite-only. Drop your email and we'll send you a code.
           </Text>
 
           <View style={styles.form}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
               placeholder="Email"
-              placeholderTextColor={defaultColors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -149,7 +149,7 @@ export default function Auth() {
           </View>
 
           <TouchableOpacity onPress={() => setMode('signin')}>
-            <Text style={styles.linkText}>
+            <Text style={[styles.linkText, { color: colors.textSecondary }]}>
               Already have an invite?{' '}
               <Text style={styles.link}>Sign in</Text>
             </Text>
@@ -170,10 +170,10 @@ export default function Auth() {
       >
         <Logo size={80} showText />
 
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: colors.text }]}>
           {mode === 'signin' ? 'Welcome back' : 'Create Account'}
         </Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {mode === 'signin'
             ? 'Sign in to continue'
             : 'Enter your invite code to get started'}
@@ -183,9 +183,9 @@ export default function Auth() {
         {mode === 'signup' && (
           <View style={styles.inviteCodeContainer}>
             <TextInput
-              style={[styles.input, styles.inviteInput]}
+              style={[styles.input, styles.inviteInput, { backgroundColor: colors.surface, color: colors.text }]}
               placeholder="INVITE CODE"
-              placeholderTextColor={defaultColors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={inviteCode}
               onChangeText={(text) => setInviteCode(text.toUpperCase())}
               autoCapitalize="characters"
@@ -210,7 +210,7 @@ export default function Auth() {
           onPress={() => setShowEmailForm(!showEmailForm)}
           style={styles.emailToggle}
         >
-          <Text style={styles.emailToggleText}>
+          <Text style={[styles.emailToggleText, { color: colors.textSecondary }]}>
             {showEmailForm ? 'Hide email form' : 'Or continue with email'}
           </Text>
         </TouchableOpacity>
@@ -219,18 +219,18 @@ export default function Auth() {
         {showEmailForm && (
           <View style={styles.form}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
               placeholder="Email"
-              placeholderTextColor={defaultColors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
               placeholder="Password"
-              placeholderTextColor={defaultColors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -254,7 +254,7 @@ export default function Auth() {
             setError(null);
           }}
         >
-          <Text style={styles.linkText}>
+          <Text style={[styles.linkText, { color: colors.textSecondary }]}>
             {mode === 'signin' ? (
               <>
                 Don't have an account?{' '}
@@ -272,7 +272,7 @@ export default function Auth() {
         {/* Waitlist option */}
         {mode === 'signup' && (
           <TouchableOpacity onPress={() => setMode('waitlist')}>
-            <Text style={[styles.linkText, { marginTop: spacing.md }]}>
+            <Text style={[styles.linkText, { marginTop: spacing.md, color: colors.textSecondary }]}>
               No invite code?{' '}
               <Text style={styles.link}>Join the waitlist</Text>
             </Text>

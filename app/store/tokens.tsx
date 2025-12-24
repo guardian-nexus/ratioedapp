@@ -309,7 +309,7 @@ export default function Tokens() {
             disabled={loading}
           >
             <Ionicons name="refresh" size={16} color={colors.textSecondary} />
-            <Text style={styles.linkText}>Restore Purchases</Text>
+            <Text style={[styles.linkText, { color: colors.textSecondary }]}>Restore Purchases</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -318,7 +318,7 @@ export default function Tokens() {
             disabled={loading}
           >
             <Ionicons name="gift" size={16} color={colors.textSecondary} />
-            <Text style={styles.linkText}>Have a promo code?</Text>
+            <Text style={[styles.linkText, { color: colors.textSecondary }]}>Have a promo code?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -327,7 +327,7 @@ export default function Tokens() {
             disabled={loading}
           >
             <Ionicons name="bug" size={16} color={colors.textSecondary} />
-            <Text style={styles.linkText}>Debug: Check Products</Text>
+            <Text style={[styles.linkText, { color: colors.textSecondary }]}>Debug: Check Products</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -242,7 +242,7 @@ export default function Share() {
       </View>
 
       {/* Share Options */}
-      <View style={[styles.actionsContainer, { paddingBottom: insets.bottom + spacing.md, borderTopColor: colors.border }]}>
+      <View style={[styles.actionsContainer, { paddingBottom: insets.bottom + spacing.md }]}>
         <GradientButton
           title="Share to Instagram"
           icon="logo-instagram"
@@ -326,8 +326,6 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: defaultColors.border,
     gap: spacing.md,
   },
   secondaryActions: {

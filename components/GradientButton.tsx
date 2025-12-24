@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useColors } from '@/hooks/useColors';
 import { colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
+import { tapLight } from '@/utils/haptics';
 
 interface GradientButtonProps {
   title: string;
@@ -30,10 +31,15 @@ export default function GradientButton({
   const colors = useColors();
   const isDisabled = disabled || loading;
 
+  const handlePress = () => {
+    tapLight();
+    onPress();
+  };
+
   if (variant === 'outline') {
     return (
       <TouchableOpacity
-        onPress={onPress}
+        onPress={handlePress}
         disabled={isDisabled}
         style={[styles.outlineContainer, { borderColor: colors.gradientStart }, isDisabled && styles.disabled, style]}
         activeOpacity={0.8}
@@ -56,7 +62,7 @@ export default function GradientButton({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       style={[styles.container, isDisabled && styles.disabled, style]}
       activeOpacity={0.8}

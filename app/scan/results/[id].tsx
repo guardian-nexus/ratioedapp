@@ -24,6 +24,8 @@ import { useColors } from '@/hooks/useColors';
 import { track, Events } from '@/services/analytics';
 import { getScoreColor, getScoreLabel, colors as defaultColors, spacing, typography, borderRadius } from '@/theme';
 import { AnalysisResult, Pattern, ConversationVibe } from '@/types';
+import { success as hapticSuccess } from '@/utils/haptics';
+import { trackScanAndMaybePromptReview } from '@/utils/storeReview';
 
 export default function Results() {
   const insets = useSafeAreaInsets();
@@ -93,6 +95,8 @@ export default function Results() {
           ]),
         ]).start(() => {
           setAnimationComplete(true);
+          hapticSuccess(); // Haptic feedback when score is revealed
+          trackScanAndMaybePromptReview(); // Maybe ask for App Store review
         });
       });
 

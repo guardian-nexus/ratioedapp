@@ -77,6 +77,12 @@ export default function Analyzing() {
     if (isChatExportMode || isGroupChatMode) {
       return 'Reading through your conversation...';
     }
+    if (isCompareMode) {
+      return 'Comparing two conversations takes 2-3 minutes';
+    }
+    if (isCompareWithExisting) {
+      return 'This usually takes 1-2 minutes';
+    }
     const count = getImageCount();
     if (count <= 2) {
       return 'This usually takes about a minute';
@@ -540,7 +546,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: spacing.lg,
     maxWidth: 300,
-    minHeight: 90,
+    minHeight: 110,
     alignItems: 'center',
     justifyContent: 'center',
   },

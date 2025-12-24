@@ -72,10 +72,11 @@ interface RetryOptions {
   retryableErrors?: string[];
 }
 
+// Note: Edge function already retries 3x, so keep client retries minimal
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
-  maxRetries: 5,
-  baseDelayMs: 2000,
-  maxDelayMs: 30000,
+  maxRetries: 2,
+  baseDelayMs: 3000,
+  maxDelayMs: 10000,
   retryableErrors: ['RATE_LIMITED', 'API_UNAVAILABLE', 'MAINTENANCE', 'overloaded', '529', '503'],
 };
 
